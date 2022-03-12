@@ -1,0 +1,118 @@
+---
+title: "Cointegration Tests (ADF and Johansen) within R"
+output: html_notebook
+---
+source: http://denizstij.blogspot.com/2013/11/cointegration-tests-adf-and-johansen.html
+
+ADF Test
+--------
+In this test, we use linear regression to estimate spread between two securities and then ACF to test if spread is stationary, 
+which in a way also test of cointegration for two securities.
+
+```{r}
+library("quantmod", warn.conflicts = FALSE)
+library("fUnitRoots", warn.conflicts = FALSE)
+```
+
+Lets get first data for EWA and EWC from yahoo finance and extract adjusted close prices:
+
+```{r}
+getSymbols("EWA")
+getSymbols("EWC")
+ewaAdj <- unclass(EWA$EWA.Adjusted)
+ewcAdj <- unclass(EWC$EWC.Adjusted)
+```
+
+Now lets do linear regression where we assume drift is zero. Since we are not sure which security is dependent and independent, 
+we need to apply the following for both case:
+
+EWC is DEPENDENT in this case:
+```{r}
+reg <- lm(ewcAdj ~ ewaAdj + 0)
+```
+
+And now lets use ADF Test on the spread (which is actually the regression residuals on the step above):
+```{r}
+adfTest(reg$residuals, type = "nc")
+```
+
+EWA is DEPENDENT in this case:
+```{r}
+reg <- lm(ewaAdj ~ ewcAdj + 0)
+adfTest(reg$residuals, type = "nc")
+```
+
+We choose the most negative Dickey-Fuller value test (-2.8056 and -2.7848) as our DEPENDENT variable. In this case, EWC with 95% confidence level (p-value is 1%), we reject null hypothesis (unit root), so we can assume spread (residual) is stationary, therefore there is a cointegration. 
+
+```{r}
+cointegrationTestLM_ADF <- function(A, B, startDate) {
+  cat("\n Processing stock:", A, " and ", B, " start date:", startDate)
+  
+  aData <- getSymbols(A, from = startDate, auto.assign = FALSE)
+  aAdj <- unclass(aData[ , 6])
+  bData <- getSymbols(B, from = startDate, auto.assign = FALSE)
+  bAdj <- unclass(bData[ , 6])
+  lenA <- length(aAdj)
+  lenB <- length(bAdj)
+  N <- min(lenA, lenB) 
+  startA <- 0
+  startB <- 0
+  if (lenA != N || lenB != N){
+    startA <- lenA - N + 1
+    startB <- lenB - N + 1
+  }
+  cat("\n Index start", A, ":", startA, " Length ", lenA)
+  cat("\n Index start", B, ":", startB, " Length ", lenB)
+  cat("\n")
+  aAdj <- aAdj[startA:lenA, ]
+  bAdj <- bAdj[startB:lenB, ]
+   
+  regA <- lm(aAdj ~ bAdj + 0)
+  summary(regA)
+  regB <- lm(bAdj ~ aAdj + 0)
+  summary(regB)
+   
+  coA <- adfTest(regA$residuals, type = "nc")
+  cat("\n")
+  coB <- adfTest(regB$residuals, type = "nc")
+  
+  cat("\n", A, " p-value", coA@test$p.value, " statistics:", coA@test$statistic)     
+  cat("\n", B, " p-value", coB@test$p.value, " statistics:", coB@test$statistic)     
+   
+  # Choose most NEGATIVE value
+  if (coA@test$statistic < coB@test$statistic){
+    cat("\n Stock ", A, " is dependent on stock ", B)
+    cat("\n p-value", coA@test$p.value, " statistics: ", coA@test$statistic)     
+    p <- coA@test$p.value
+    s <- coA@test$statistic
+  } else {
+    cat("\n Stock ", B, " is dependent on stock:", A)
+    cat("\n p-value", coB@test$p.value, " statistics: ", coB@test$statistic)     
+    p <- coB@test$p.value
+    s <- coB@test$statistic    
+   }   
+  return(c(s, p))
+}
+```
+
+```{r}
+res <- cointegrationTestLM_ADF("EWA", "EWC", "2010-01-01")
+```
+
+Johansen Test
+-------------
+As you can see above, ADF approach has some drawbacks such as:
+- Need to confirm dependet/independent variable
+- Can not test multiple instruments
+
+Johansen test addresses these points
+
+```{r}
+library("urca") # For cointegration
+coRes <- ca.jo(data.frame(ewaAdj, ewcAdj), type = "trace", K = 2, ecdet = "none", spec = "longrun")
+summary(coRes)
+```
+
+Johansen test estimates the rank (r) of given matrix of time series with confidence level. In our example we have two time series, therefore Johansen tests null hypothesis of r=0 < (no cointegration at all), r<1 (till n-1, where n=2 in our example). As in example above, if r<=1 test value (2.07) was greater than a confidence level's value (say 10%: 6.50), we would assume there is a cointegration of r time series (in this case r<=1). But as you see, none of our test values are greater than than critical values at r<0 and r<=1, therefore there is no cointegration. This is opposite of ADF result we found above. Based on my some research, i've found that Johansen test can be misleading in some extreme case (see that discussion for more info). Once a cointegration is established, eigenvector (normalized first column) would be used as weight for a portfolio.
+
+In addition above methods, KPSS(Kwiatkowski–Phillips–Schmidt–Shin)can be also used to test stationarity.

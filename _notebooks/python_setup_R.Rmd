@@ -1,0 +1,281 @@
+---
+title: "Python Setup in R with Reticulate"
+subtitle: "Using R + Python"
+author: "Anselmo Araujo"
+date: as.character(Sys.Date())
+output: 
+  html_notebook:
+    theme: flatly
+    toc: true
+    toc_depth: 2
+---
+
+
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+knitr::knit_engines$set(
+  python = reticulate::eng_python
+)
+```
+
+```{r}
+library(tidyverse)
+library(reticulate)
+```
+
+```{r}
+reticulate::use_virtualenv(virtualenv = file.path('py38'), required = TRUE)
+reticulate::py_config()
+```
+
+```{python}
+import numpy as np
+import pandas as pd
+
+np.arange(1, 10)
+
+# Make a sequence in a data frame using dict format
+df = pd.DataFrame(data = {"sequence":np.arange(1,20,.01)})
+
+# Use assign (mutate) equivalent to calculate the np.sin() of the series
+df = df.assign(value=np.sin(df["sequence"]))
+
+df
+```
+
+```{python}
+import matplotlib.pyplot as plt
+
+df.plot(x="sequence", y = "value", title = "Matplotlib")
+
+plt.show()
+```
+
+```{python}
+from sklearn.ensemble import RandomForestClassifier
+
+clf = RandomForestClassifier(random_state=0)
+
+X = [[ 1,  2,  3],  # 2 samples, 3 features
+     [11, 12, 13]]
+
+y = [0, 1]  # classes of each sample
+
+clf.fit(X, y)
+```
+
+```{python}
+clf.predict(X) 
+```
+
+```{python}
+from sklearn.cluster import AffinityPropagation
+from sklearn.datasets import make_blobs
+
+# #############################################################################
+# Generate sample data
+centers = [[1, 1], [-1, -1], [1, -1]]
+X, labels_true = make_blobs(n_samples=300, centers=centers, cluster_std=0.5,
+                            random_state=0)
+
+# Compute Affinity Propagation
+af = AffinityPropagation(preference=-50).fit(X)
+cluster_centers_indices = af.cluster_centers_indices_
+labels = af.labels_
+
+n_clusters_ = len(cluster_centers_indices)
+
+# #############################################################################
+# Plot result
+import matplotlib.pyplot as plt
+from itertools import cycle
+
+plt.close('all')
+plt.figure(1)
+plt.clf()
+
+colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+for k, col in zip(range(n_clusters_), colors):
+    class_members = labels == k
+    cluster_center = X[cluster_centers_indices[k]]
+    plt.plot(X[class_members, 0], X[class_members, 1], col + '.')
+    plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
+             markeredgecolor='k', markersize=14)
+    for x in X[class_members]:
+        plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)
+
+plt.title('Estimated number of clusters: %d' % n_clusters_)
+plt.show()
+```
+
+```{python}
+# TensorFlow and tf.keras
+import tensorflow as tf
+from tensorflow import keras
+
+# Helper Libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+print('Tensorflow version ' + tf.__version__)
+
+# Load the fashion_mnist dataset from keras
+fashion_mnist = keras.datasets.fashion_mnist
+(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+
+train_images.shape
+
+np.unique(train_labels)
+
+class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
+               'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+               
+plt.figure()
+plt.imshow(train_images[1])
+plt.colorbar()
+plt.grid(False)
+plt.show()
+```
+
+```{python}
+plt.figure(figsize=(10,10))
+for i in range(25):
+    plt.subplot(5,5,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(train_images[i], cmap=plt.cm.binary)
+    plt.xlabel(class_names[train_labels[i]])
+plt.show()
+```
+
+#### Modeling with Keras
+
+Make a *keras* model using the *Sequential()* with 3 steps: Flatten, Dense and Dense.
+
+```{python}
+model = keras.Sequential([
+    keras.layers.Flatten(input_shape=(28, 28)),
+    keras.layers.Dense(128, activation='relu'),
+    keras.layers.Dense(10)
+])
+
+# compile the model with the 'adam' optimizer
+model.compile(
+    optimizer = 'adam',
+    loss      = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics   = ['accuracy']
+)
+
+# Inspect the model summary
+model.summary()
+```
+
+Fit the Keras Model
+**Critical Step**
+
+```{python}
+model.fit(train_images, train_labels, epochs=10, verbose=1)
+```
+
+Training History
+
+```{python}
+history = model.history.history
+history
+```
+Plot history
+
+```{r}
+py$history %>% 
+    as_tibble() %>%
+    unnest(loss, accuracy) %>%
+    rowid_to_column() %>%
+    pivot_longer(-rowid) %>%
+    ggplot(aes(rowid, value, color = name)) +
+    geom_line() +
+    geom_point() +
+    labs(title = "Training Accuracy")
+```
+
+Evaluate accuracy on the out-of-sample images
+
+```{python}
+test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+```
+
+Make Predictions
+
+The model produces linear outputs cakked “logits”. The softmax layer to converts the logits to probabilities.
+
+```{python}
+probability_model = tf.keras.Sequential([model, tf.keras.layers.Softmax()])
+```
+
+We can then classify all of the test images (held out)
+
+```{python}
+predictions = probability_model.predict(test_images)
+```
+
+We can make a prediction for the first image.
+
+```{python}
+predictions[0]
+```
+
+Use np.argmax() to determine which index has the highest probability.
+
+```{python}
+np.argmax(predictions[0])
+```
+
+The index value can be retrieved with np.max().
+
+```{python}
+np.max(predictions[0])
+```
+
+Get the class name.
+
+```{python}
+class_names[np.argmax(predictions[0])]
+```
+
+And visualize the image.
+
+```{python}
+plt.figure()
+plt.imshow(test_images[0])
+plt.colorbar()
+plt.grid(False)
+plt.show()
+```
+
+### Scraping ETF Constituents with Python from RStudio
+[link](https://robotwealth.com/using-python-from-the-comfort-of-r-studio/)
+
+```{python}
+import pandas as pd
+def get_holdings(spdr_ticker):
+    url = f'http://www.sectorspdr.com/sectorspdr/IDCO.Client.Spdrs.Holdings/Export/ExportCsv?symbol={spdr_ticker}'
+    df = pd.read_csv(url, skiprows=1).to_csv(f'{spdr_ticker}_holdings.csv', index=False)
+    return df
+```
+
+```{python}
+import pandas as pd
+def get_holdings(spdr_ticker):
+    """read in ETF holdings"""
+    url = f"http://www.sectorspdr.com/sectorspdr/IDCO.Client.Spdrs.Holdings/Export/ExportCsv?symbol={spdr_ticker}"
+    df = pd.read_csv(url, skiprows=1, usecols=[i for i in range(3)]) 
+    return df
+```
+

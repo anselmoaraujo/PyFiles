@@ -1,0 +1,3441 @@
+<!DOCTYPE html>
+<!-- saved from url=(0094)https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/# -->
+<html lang="en-us" class="gr__yetanotheriteration_netlify_com"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hugo 0.47.1 with theme Tranquilpeak 0.4.3-BETA">
+    <title>Operações Long-Short através de Cointegração usando R</title>
+    <meta name="author" content="Giuliano Sposito">
+    <meta name="keywords" content="">
+
+    <link rel="icon" href="https://yetanotheriteration.netlify.com/favicon.png">
+    
+
+    
+    <meta name="description" content="Operações Long-Short por Cointegração é uma estratégia de investimento em ativos que consiste em encontrar pares de ações (índices ou commodities) que mantém um padrão de comportamento estável e previsível (equilíbrio estacionário) com variações de curto prazo que permita ser explorado em operações de Long (compra) e Short (venda) do par. Este R-Notebook refaz o passo-a-passo nas análises estatísticas necessárias para detectar e operação essa estratégia de mercado.
+
+Introdução
+A ideia tradicional de uma reversão de “Pair Trading” é encontrar dois ativos distintos, compartilhando fatores subjacentes que afetam seus movimentos, por exemplo, McDonald’s e Burger King.">
+    <meta property="og:description" content="Operações Long-Short por Cointegração é uma estratégia de investimento em ativos que consiste em encontrar pares de ações (índices ou commodities) que mantém um padrão de comportamento estável e previsível (equilíbrio estacionário) com variações de curto prazo que permita ser explorado em operações de Long (compra) e Short (venda) do par. Este R-Notebook refaz o passo-a-passo nas análises estatísticas necessárias para detectar e operação essa estratégia de mercado.
+
+Introdução
+A ideia tradicional de uma reversão de “Pair Trading” é encontrar dois ativos distintos, compartilhando fatores subjacentes que afetam seus movimentos, por exemplo, McDonald’s e Burger King.">
+    <meta property="og:type" content="blog">
+    <meta property="og:title" content="Operações Long-Short através de Cointegração usando R">
+    <meta property="og:url" content="/2018/08/operando-long-short-usando-cointegracao-em-r/">
+    <meta property="og:site_name" content="Yet Another Iteration">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Yet Another Iteration">
+    <meta name="twitter:description" content="Operações Long-Short por Cointegração é uma estratégia de investimento em ativos que consiste em encontrar pares de ações (índices ou commodities) que mantém um padrão de comportamento estável e previsível (equilíbrio estacionário) com variações de curto prazo que permita ser explorado em operações de Long (compra) e Short (venda) do par. Este R-Notebook refaz o passo-a-passo nas análises estatísticas necessárias para detectar e operação essa estratégia de mercado.
+
+Introdução
+A ideia tradicional de uma reversão de “Pair Trading” é encontrar dois ativos distintos, compartilhando fatores subjacentes que afetam seus movimentos, por exemplo, McDonald’s e Burger King.">
+    
+      <meta name="twitter:creator" content="@gsposito">
+    
+    
+
+    
+    
+
+    
+      <meta property="og:image" content="//www.gravatar.com/avatar/2adfb1930aa9591ea756b0d94ca3603b?s=640">
+    
+
+    
+      <meta property="og:image" content="/images/coint_tn.png">
+    
+    
+      <meta property="og:image" content="/images/coint_cover.png">
+    
+    
+
+    
+
+    
+    <link rel="stylesheet" href="./Operações Long-Short Cointegração R_files/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
+    <link rel="stylesheet" href="./Operações Long-Short Cointegração R_files/jquery.fancybox.min.css" integrity="sha256-vuXZ9LGmmwtjqFX1F+EKin1ThZMub58gKULUyf0qECk=" crossorigin="anonymous">
+    <link rel="stylesheet" href="./Operações Long-Short Cointegração R_files/jquery.fancybox-thumbs.min.css" integrity="sha256-SEa4XYAHihTcEP1f5gARTB2K26Uk8PsndQYHQC1f4jU=" crossorigin="anonymous">
+    
+    
+    <link rel="stylesheet" href="./Operações Long-Short Cointegração R_files/style-jsjn0006wyhpyzivf6yceb31gvpjatbcs3qzjvlumobfnugccvobqwxnnaj8.min.css">
+    
+    
+
+    
+      
+<script async="" src="./Operações Long-Short Cointegração R_files/analytics.js.download"></script><script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112393378-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    
+    
+  <script src="./Operações Long-Short Cointegração R_files/embed.js.download" data-timestamp="1566259633506"></script><style type="text/css">.fancybox-margin{margin-right:0px;}</style><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style><link rel="prefetch" as="style" href="https://c.disquscdn.com/next/embed/styles/lounge.c46a5b3df6acec9d5cde6bf8b61aaf6e.css"><link rel="prefetch" as="script" href="https://c.disquscdn.com/next/embed/common.bundle.57d935b03ca64a8fc2ae95b8d550f132.js"><link rel="prefetch" as="script" href="https://c.disquscdn.com/next/embed/lounge.bundle.f70f445d7ac0ff2c79eeb2d0e8586ac6.js"><link rel="prefetch" as="script" href="https://disqus.com/next/config.js"><script src="./Operações Long-Short Cointegração R_files/alfalfalfa.0823c767a3bc925f628afd9bed26c958.js.download" async="" charset="UTF-8"></script><style type="text/css">.mjx-chtml {display: inline-block; line-height: 0; text-indent: 0; text-align: left; text-transform: none; font-style: normal; font-weight: normal; font-size: 100%; font-size-adjust: none; letter-spacing: normal; word-wrap: normal; word-spacing: normal; white-space: nowrap; float: none; direction: ltr; max-width: none; max-height: none; min-width: 0; min-height: 0; border: 0; margin: 0; padding: 1px 0}
+.MJXc-display {display: block; text-align: center; margin: 1em 0; padding: 0}
+.mjx-chtml[tabindex]:focus, body :focus .mjx-chtml[tabindex] {display: inline-table}
+.mjx-full-width {text-align: center; display: table-cell!important; width: 10000em}
+.mjx-math {display: inline-block; border-collapse: separate; border-spacing: 0}
+.mjx-math * {display: inline-block; -webkit-box-sizing: content-box!important; -moz-box-sizing: content-box!important; box-sizing: content-box!important; text-align: left}
+.mjx-numerator {display: block; text-align: center}
+.mjx-denominator {display: block; text-align: center}
+.MJXc-stacked {height: 0; position: relative}
+.MJXc-stacked > * {position: absolute}
+.MJXc-bevelled > * {display: inline-block}
+.mjx-stack {display: inline-block}
+.mjx-op {display: block}
+.mjx-under {display: table-cell}
+.mjx-over {display: block}
+.mjx-over > * {padding-left: 0px!important; padding-right: 0px!important}
+.mjx-under > * {padding-left: 0px!important; padding-right: 0px!important}
+.mjx-stack > .mjx-sup {display: block}
+.mjx-stack > .mjx-sub {display: block}
+.mjx-prestack > .mjx-presup {display: block}
+.mjx-prestack > .mjx-presub {display: block}
+.mjx-delim-h > .mjx-char {display: inline-block}
+.mjx-surd {vertical-align: top}
+.mjx-mphantom * {visibility: hidden}
+.mjx-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 2px 3px; font-style: normal; font-size: 90%}
+.mjx-annotation-xml {line-height: normal}
+.mjx-menclose > svg {fill: none; stroke: currentColor}
+.mjx-mtr {display: table-row}
+.mjx-mlabeledtr {display: table-row}
+.mjx-mtd {display: table-cell; text-align: center}
+.mjx-label {display: table-row}
+.mjx-box {display: inline-block}
+.mjx-block {display: block}
+.mjx-span {display: inline}
+.mjx-char {display: block; white-space: pre}
+.mjx-itable {display: inline-table; width: auto}
+.mjx-row {display: table-row}
+.mjx-cell {display: table-cell}
+.mjx-table {display: table; width: 100%}
+.mjx-line {display: block; height: 0}
+.mjx-strut {width: 0; padding-top: 1em}
+.mjx-vsize {width: 0}
+.MJXc-space1 {margin-left: .167em}
+.MJXc-space2 {margin-left: .222em}
+.MJXc-space3 {margin-left: .278em}
+.mjx-chartest {display: block; visibility: hidden; position: absolute; top: 0; line-height: normal; font-size: 500%}
+.mjx-chartest .mjx-char {display: inline}
+.mjx-chartest .mjx-box {padding-top: 1000px}
+.MJXc-processing {visibility: hidden; position: fixed; width: 0; height: 0; overflow: hidden}
+.MJXc-processed {display: none}
+.mjx-test {display: block; font-style: normal; font-weight: normal; font-size: 100%; font-size-adjust: none; text-indent: 0; text-transform: none; letter-spacing: normal; word-spacing: normal; overflow: hidden; height: 1px}
+.mjx-ex-box-test {position: absolute; width: 1px; height: 60ex}
+.mjx-line-box-test {display: table!important}
+.mjx-line-box-test span {display: table-cell!important; width: 10000em!important; min-width: 0; max-width: none; padding: 0; border: 0; margin: 0}
+#MathJax_CHTML_Tooltip {background-color: InfoBackground; color: InfoText; border: 1px solid black; box-shadow: 2px 2px 5px #AAAAAA; -webkit-box-shadow: 2px 2px 5px #AAAAAA; -moz-box-shadow: 2px 2px 5px #AAAAAA; -khtml-box-shadow: 2px 2px 5px #AAAAAA; padding: 3px 4px; z-index: 401; position: absolute; left: 0; top: 0; width: auto; height: auto; display: none}
+.mjx-chtml .mjx-noError {line-height: 1.2; vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+.MJXc-TeX-unknown-R {font-family: STIXGeneral,'Cambria Math','Arial Unicode MS',serif; font-style: normal; font-weight: normal}
+.MJXc-TeX-unknown-I {font-family: STIXGeneral,'Cambria Math','Arial Unicode MS',serif; font-style: italic; font-weight: normal}
+.MJXc-TeX-unknown-B {font-family: STIXGeneral,'Cambria Math','Arial Unicode MS',serif; font-style: normal; font-weight: bold}
+.MJXc-TeX-unknown-BI {font-family: STIXGeneral,'Cambria Math','Arial Unicode MS',serif; font-style: italic; font-weight: bold}
+.MJXc-TeX-ams-R {font-family: MJXc-TeX-ams-R,MJXc-TeX-ams-Rw}
+.MJXc-TeX-cal-B {font-family: MJXc-TeX-cal-B,MJXc-TeX-cal-Bx,MJXc-TeX-cal-Bw}
+.MJXc-TeX-frak-R {font-family: MJXc-TeX-frak-R,MJXc-TeX-frak-Rw}
+.MJXc-TeX-frak-B {font-family: MJXc-TeX-frak-B,MJXc-TeX-frak-Bx,MJXc-TeX-frak-Bw}
+.MJXc-TeX-math-BI {font-family: MJXc-TeX-math-BI,MJXc-TeX-math-BIx,MJXc-TeX-math-BIw}
+.MJXc-TeX-sans-R {font-family: MJXc-TeX-sans-R,MJXc-TeX-sans-Rw}
+.MJXc-TeX-sans-B {font-family: MJXc-TeX-sans-B,MJXc-TeX-sans-Bx,MJXc-TeX-sans-Bw}
+.MJXc-TeX-sans-I {font-family: MJXc-TeX-sans-I,MJXc-TeX-sans-Ix,MJXc-TeX-sans-Iw}
+.MJXc-TeX-script-R {font-family: MJXc-TeX-script-R,MJXc-TeX-script-Rw}
+.MJXc-TeX-type-R {font-family: MJXc-TeX-type-R,MJXc-TeX-type-Rw}
+.MJXc-TeX-cal-R {font-family: MJXc-TeX-cal-R,MJXc-TeX-cal-Rw}
+.MJXc-TeX-main-B {font-family: MJXc-TeX-main-B,MJXc-TeX-main-Bx,MJXc-TeX-main-Bw}
+.MJXc-TeX-main-I {font-family: MJXc-TeX-main-I,MJXc-TeX-main-Ix,MJXc-TeX-main-Iw}
+.MJXc-TeX-main-R {font-family: MJXc-TeX-main-R,MJXc-TeX-main-Rw}
+.MJXc-TeX-math-I {font-family: MJXc-TeX-math-I,MJXc-TeX-math-Ix,MJXc-TeX-math-Iw}
+.MJXc-TeX-size1-R {font-family: MJXc-TeX-size1-R,MJXc-TeX-size1-Rw}
+.MJXc-TeX-size2-R {font-family: MJXc-TeX-size2-R,MJXc-TeX-size2-Rw}
+.MJXc-TeX-size3-R {font-family: MJXc-TeX-size3-R,MJXc-TeX-size3-Rw}
+.MJXc-TeX-size4-R {font-family: MJXc-TeX-size4-R,MJXc-TeX-size4-Rw}
+@font-face {font-family: MJXc-TeX-ams-R; src: local('MathJax_AMS'), local('MathJax_AMS-Regular')}
+@font-face {font-family: MJXc-TeX-ams-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_AMS-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_AMS-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_AMS-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-cal-B; src: local('MathJax_Caligraphic Bold'), local('MathJax_Caligraphic-Bold')}
+@font-face {font-family: MJXc-TeX-cal-Bx; src: local('MathJax_Caligraphic'); font-weight: bold}
+@font-face {font-family: MJXc-TeX-cal-Bw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Caligraphic-Bold.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Caligraphic-Bold.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Caligraphic-Bold.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-frak-R; src: local('MathJax_Fraktur'), local('MathJax_Fraktur-Regular')}
+@font-face {font-family: MJXc-TeX-frak-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Fraktur-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Fraktur-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Fraktur-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-frak-B; src: local('MathJax_Fraktur Bold'), local('MathJax_Fraktur-Bold')}
+@font-face {font-family: MJXc-TeX-frak-Bx; src: local('MathJax_Fraktur'); font-weight: bold}
+@font-face {font-family: MJXc-TeX-frak-Bw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Fraktur-Bold.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Fraktur-Bold.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Fraktur-Bold.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-math-BI; src: local('MathJax_Math BoldItalic'), local('MathJax_Math-BoldItalic')}
+@font-face {font-family: MJXc-TeX-math-BIx; src: local('MathJax_Math'); font-weight: bold; font-style: italic}
+@font-face {font-family: MJXc-TeX-math-BIw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Math-BoldItalic.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Math-BoldItalic.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Math-BoldItalic.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-sans-R; src: local('MathJax_SansSerif'), local('MathJax_SansSerif-Regular')}
+@font-face {font-family: MJXc-TeX-sans-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_SansSerif-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_SansSerif-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_SansSerif-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-sans-B; src: local('MathJax_SansSerif Bold'), local('MathJax_SansSerif-Bold')}
+@font-face {font-family: MJXc-TeX-sans-Bx; src: local('MathJax_SansSerif'); font-weight: bold}
+@font-face {font-family: MJXc-TeX-sans-Bw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_SansSerif-Bold.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_SansSerif-Bold.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_SansSerif-Bold.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-sans-I; src: local('MathJax_SansSerif Italic'), local('MathJax_SansSerif-Italic')}
+@font-face {font-family: MJXc-TeX-sans-Ix; src: local('MathJax_SansSerif'); font-style: italic}
+@font-face {font-family: MJXc-TeX-sans-Iw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_SansSerif-Italic.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_SansSerif-Italic.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_SansSerif-Italic.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-script-R; src: local('MathJax_Script'), local('MathJax_Script-Regular')}
+@font-face {font-family: MJXc-TeX-script-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Script-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Script-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Script-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-type-R; src: local('MathJax_Typewriter'), local('MathJax_Typewriter-Regular')}
+@font-face {font-family: MJXc-TeX-type-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Typewriter-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Typewriter-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Typewriter-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-cal-R; src: local('MathJax_Caligraphic'), local('MathJax_Caligraphic-Regular')}
+@font-face {font-family: MJXc-TeX-cal-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Caligraphic-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Caligraphic-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Caligraphic-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-main-B; src: local('MathJax_Main Bold'), local('MathJax_Main-Bold')}
+@font-face {font-family: MJXc-TeX-main-Bx; src: local('MathJax_Main'); font-weight: bold}
+@font-face {font-family: MJXc-TeX-main-Bw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Main-Bold.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Main-Bold.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Main-Bold.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-main-I; src: local('MathJax_Main Italic'), local('MathJax_Main-Italic')}
+@font-face {font-family: MJXc-TeX-main-Ix; src: local('MathJax_Main'); font-style: italic}
+@font-face {font-family: MJXc-TeX-main-Iw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Main-Italic.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Main-Italic.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Main-Italic.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-main-R; src: local('MathJax_Main'), local('MathJax_Main-Regular')}
+@font-face {font-family: MJXc-TeX-main-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Main-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Main-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Main-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-math-I; src: local('MathJax_Math Italic'), local('MathJax_Math-Italic')}
+@font-face {font-family: MJXc-TeX-math-Ix; src: local('MathJax_Math'); font-style: italic}
+@font-face {font-family: MJXc-TeX-math-Iw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Math-Italic.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Math-Italic.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Math-Italic.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-size1-R; src: local('MathJax_Size1'), local('MathJax_Size1-Regular')}
+@font-face {font-family: MJXc-TeX-size1-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Size1-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Size1-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Size1-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-size2-R; src: local('MathJax_Size2'), local('MathJax_Size2-Regular')}
+@font-face {font-family: MJXc-TeX-size2-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Size2-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Size2-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Size2-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-size3-R; src: local('MathJax_Size3'), local('MathJax_Size3-Regular')}
+@font-face {font-family: MJXc-TeX-size3-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Size3-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Size3-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Size3-Regular.otf') format('opentype')}
+@font-face {font-family: MJXc-TeX-size4-R; src: local('MathJax_Size4'), local('MathJax_Size4-Regular')}
+@font-face {font-family: MJXc-TeX-size4-Rw; src /*1*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Size4-Regular.eot'); src /*2*/: url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Size4-Regular.woff') format('woff'), url('https://cdn.bootcss.com/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Size4-Regular.otf') format('opentype')}
+</style></head>
+
+  <body data-gr-c-s-loaded="true"><div id="MathJax_Message" style="display: none;"></div>
+    <div id="blog">
+      <header id="header" data-behavior="5" class="">
+  <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+  <div class="header-title">
+    <a class="header-title-link" href="https://yetanotheriteration.netlify.com/">Yet Another Iteration</a>
+  </div>
+  
+    
+      <a class="header-right-picture " href="https://yetanotheriteration.netlify.com/#about">
+    
+    
+    
+      
+        <img class="header-picture" src="./Operações Long-Short Cointegração R_files/2adfb1930aa9591ea756b0d94ca3603b.jpeg" alt="Author&#39;s picture">
+      
+    
+    </a>
+  
+</header>
+
+      <nav id="sidebar" data-behavior="5">
+  <div class="sidebar-container">
+    
+      <div class="sidebar-profile">
+        <a href="https://yetanotheriteration.netlify.com/#about">
+          <img class="sidebar-profile-picture" src="./Operações Long-Short Cointegração R_files/2adfb1930aa9591ea756b0d94ca3603b(1).jpeg" alt="Author&#39;s picture">
+        </a>
+        <h4 class="sidebar-profile-name">Giuliano Sposito</h4>
+        
+          <h5 class="sidebar-profile-bio">Computer Engineer<br>Masters in Tech Innovation Mgt<br>Specialized in Data Science</h5>
+        
+      </div>
+    
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://yetanotheriteration.netlify.com/">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+      
+      <span class="sidebar-button-desc">Home</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://yetanotheriteration.netlify.com/categories">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+      
+      <span class="sidebar-button-desc">Categories</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://yetanotheriteration.netlify.com/tags">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+      
+      <span class="sidebar-button-desc">Tags</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://yetanotheriteration.netlify.com/about">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+      
+      <span class="sidebar-button-desc">About</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://github.com/giulsposito">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-github"></i>
+      
+      <span class="sidebar-button-desc">GitHub</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://twitter.com/gsposito">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-twitter"></i>
+      
+      <span class="sidebar-button-desc">Twitter</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://yetanotheriteration.netlify.com/index.xml">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-rss"></i>
+      
+      <span class="sidebar-button-desc">RSS</span>
+    </a>
+  </li>
+
+
+    </ul>
+  </div>
+</nav>
+
+      
+  <div class="post-header-cover               text-center" style="background-image:url(&#39;/images/coint_cover.png&#39;)" data-behavior="5">
+    
+      <div class="post-header main-content-wrap text-center">
+  
+    <h1 class="post-title" itemprop="headline">
+      Operações Long-Short através de Cointegração usando R
+    </h1>
+  
+  
+  <div class="postShorten-meta post-meta">
+    
+      <time itemprop="datePublished" datetime="2018-08-26T00:00:00Z">
+        
+  August 26, 2018
+
+      </time>
+    
+    
+  
+  
+    <span>in</span>
+    
+      <a class="category-link" href="https://yetanotheriteration.netlify.com/categories/data-science">data science</a>
+    
+  
+
+  </div>
+
+</div>
+    
+  </div>
+
+
+      <div id="main" data-behavior="5" class="hasCover                hasCoverMetaIn">
+        <article class="post" itemscope="" itemtype="http://schema.org/BlogPosting">
+          
+          
+          <div class="post-content markdown" itemprop="articleBody">
+            <div class="main-content-wrap">
+              <script src="./Operações Long-Short Cointegração R_files/kePrint.js.download"></script>
+
+
+<p>Operações Long-Short por Cointegração é uma estratégia de investimento em ativos que consiste em encontrar pares de ações (índices ou <em>commodities</em>) que mantém um padrão de comportamento estável e previsível (equilíbrio estacionário) com variações de curto prazo que permita ser explorado em operações de Long (compra) e Short (venda) do par. Este R-Notebook refaz o passo-a-passo nas análises estatísticas necessárias para detectar e operação essa estratégia de mercado.</p>
+<!--more-->
+<div id="introducao" class="section level2">
+<h2>Introdução</h2>
+<p>A ideia tradicional de uma reversão de “<em>Pair Trading</em>” é encontrar dois ativos distintos, compartilhando fatores subjacentes que afetam seus movimentos, por exemplo, McDonald’s e Burger King. Os preços das ações de longo prazo provavelmente estarão em equilíbrio devido aos amplos fatores de mercado que afetam a produção e o consumo de hambúrguer. Uma interrupção de curto prazo para um indivíduo no par, como uma interrupção na cadeia de fornecimento que afeta apenas o McDonald’s, levaria a um deslocamento temporário em seus preços relativos.</p>
+<p>Isso significa que uma negociação de curto prazo realizada nesse ponto de interrupção deve se tornar lucrativa, pois as duas ações retornam ao seu valor de equilíbrio assim que a interrupção for resolvida.</p>
+<p>Encontrar pares de ativos ou índices que se comportem desta maneira possibilita abrir operações Long (compra) e short (venda) simultâneas quando os ativos se “afastam” momentaneamente do movimento conjunto, e se encerra quando elas retornam para o padrão. Ganha-se então com a variação da diferença (ou a distância) entre os dois.</p>
+</div>
+<div id="analise-de-cointegracao-usando-r" class="section level2">
+<h2>Análise de Cointegração usando R</h2>
+<p>Análise de Cointegração e Operação Long-Short consiste sumariamente em:</p>
+<ol style="list-style-type: decimal">
+<li>Identificar uma relação histórica entre dois ativos, ou seja, quando um sobe o outro sobe, quando um cai o outro cai (em termos percentuais fica fácil);</li>
+<li>Visualizar um momento em que há uma divergência neste percentual entre os dois ativos;</li>
+<li>Compra A e vende B (aluga e vende);</li>
+<li>Ao retornar para o percentual histórico desejado desfaz a operação, ou seja, compra B e vende A.</li>
+</ol>
+<p>O ideal ao se fazer o Long/Short é que ele seja feito no mesmo financeiro (<em>cash-neutro</em>). Neste caso, não há a preocupação se a bolsa sobe ou desce, o que importa é a relação percentual, pois vai se estar atuando nas duas pontas (compra e venda). Além disso, praticamente não há desembolso financeiro, pois o valor da venda do ativo alugado será utilizado para a compra (há apenas a margem da CBLC ou da corretora (se for maior). E ainda dá para alavancar a carteira.</p>
+<div id="caso-de-exemplo-qual3-e-rent3" class="section level3">
+<h3>Caso de Exemplo: QUAL3 e RENT3</h3>
+<p>Este notebook tem o objetivo de reproduzir o passo-a-passo para detectar e avaliar pares de ativos <a href="https://en.wikipedia.org/wiki/Cointegration">cointegrados</a> mostrado no <a href="https://drnickel.wordpress.com/2015/04/03/long-short-atraves-de-cointegracao-parte-3/">blog do Dr.&nbsp;Nickel</a>.
+Muitos dos textos explicativos aqui foram retirados (ou fortemente baseados) na série de posts sobre Cointegração explicando o processo de análise, portando vale a pena ler a série toda, bem mais detalhada e com ótimas referências:</p>
+<ol style="list-style-type: decimal">
+<li><a href="https://drnickel.wordpress.com/2015/03/15/long-short-atraves-de-cointegracao-parte-1/">Long-Short através de Cointegração – Parte 1</a></li>
+<li><a href="https://drnickel.wordpress.com/2015/03/15/long-short-atraves-de-cointegracao-parte-2/">Long-Short através de Cointegração – Parte 2</a></li>
+<li><a href="https://drnickel.wordpress.com/2015/04/03/long-short-atraves-de-cointegracao-parte-3/">Long-Short através de Cointegração – Parte 3</a></li>
+<li><a href="https://drnickel.wordpress.com/2016/11/05/long-short-atraves-de-cointegracao-parte-4/">Long-Short através de Cointegração – Parte 4</a></li>
+</ol>
+</div>
+<div id="dataset" class="section level3">
+<h3>Dataset</h3>
+<p>No poste ele faz faz uma análise dos ativos <a href="https://www.infomoney.com.br/qualicorp-qual3"><strong>QUAL3</strong> - QUALICORP ON</a> e <a href="https://www.infomoney.com.br/localiza-rent3"><strong>RENT3</strong> - Localiza ON</a> usando uma <a href="https://drnickel.files.wordpress.com/2015/04/exemplos-cointegracao-qual3_rent32.xlsx">planilha excel</a>, neste notebook refaço o procedimento usando R. Para garantir que os resultados obtidos em ambas sejam os mesmos usaremos exatamente os mesmo dados que constam na planilha.</p>
+<div class="figure">
+<img src="./Operações Long-Short Cointegração R_files/excel_data.png" alt="Cotações de QUAL3 e RENT3 no Excel">
+<p class="caption">Cotações de QUAL3 e RENT3 no Excel</p>
+</div>
+<p>Após a importação, obtemos:</p>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># data handlers</span>
+library(tidyverse)
+library(lubridate)
+
+<span class="comment"># table formatting</span>
+library(kableExtra)
+
+<span class="comment"># loading data</span>
+library(xlsx)
+xls &lt;- read.xlsx(<span class="string">"./exemplos-cointegracao-qual3_rent32.xlsx"</span>,<span class="number">2</span>) 
+
+<span class="comment"># O que nos importamos?</span>
+xls %&gt;%
+  <span class="keyword">select</span>(-<span class="string">`NA..4`</span>) %&gt;%  <span class="comment"># esta coluna estraga a formatacao da tabela</span>
+  head(<span class="number">10</span>) %&gt;% 
+  kable(caption=<span class="string">"Excel Importado"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:loadData">Table 1: </span>Excel Importado
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Data
+</th>
+<th style="text-align:left;">
+QUAL3
+</th>
+<th style="text-align:left;">
+NA.
+</th>
+<th style="text-align:left;">
+NA..1
+</th>
+<th style="text-align:left;">
+RENT3
+</th>
+<th style="text-align:left;">
+NA..2
+</th>
+<th style="text-align:left;">
+NA..3
+</th>
+<th style="text-align:left;">
+NA..5
+</th>
+<th style="text-align:left;">
+NA..6
+</th>
+<th style="text-align:left;">
+NA..7
+</th>
+<th style="text-align:left;">
+NA..8
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Preco
+</td>
+<td style="text-align:left;">
+Lag
+</td>
+<td style="text-align:left;">
+Delta
+</td>
+<td style="text-align:left;">
+Preco
+</td>
+<td style="text-align:left;">
+Lag
+</td>
+<td style="text-align:left;">
+Delta
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-10
+</td>
+<td style="text-align:left;">
+19.65
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+31.953
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-11
+</td>
+<td style="text-align:left;">
+19.7
+</td>
+<td style="text-align:left;">
+19.65
+</td>
+<td style="text-align:left;">
+0.0500000000000007
+</td>
+<td style="text-align:left;">
+32.232
+</td>
+<td style="text-align:left;">
+31.953
+</td>
+<td style="text-align:left;">
+0.279
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-15
+</td>
+<td style="text-align:left;">
+19.87
+</td>
+<td style="text-align:left;">
+19.7
+</td>
+<td style="text-align:left;">
+0.170000000000002
+</td>
+<td style="text-align:left;">
+32.124
+</td>
+<td style="text-align:left;">
+32.232
+</td>
+<td style="text-align:left;">
+-0.107999999999997
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-16
+</td>
+<td style="text-align:left;">
+19.35
+</td>
+<td style="text-align:left;">
+19.87
+</td>
+<td style="text-align:left;">
+-0.52
+</td>
+<td style="text-align:left;">
+31.584
+</td>
+<td style="text-align:left;">
+32.124
+</td>
+<td style="text-align:left;">
+-0.540000000000003
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-17
+</td>
+<td style="text-align:left;">
+18.75
+</td>
+<td style="text-align:left;">
+19.35
+</td>
+<td style="text-align:left;">
+-0.600000000000001
+</td>
+<td style="text-align:left;">
+30.594
+</td>
+<td style="text-align:left;">
+31.584
+</td>
+<td style="text-align:left;">
+-0.989999999999998
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-18
+</td>
+<td style="text-align:left;">
+18.87
+</td>
+<td style="text-align:left;">
+18.75
+</td>
+<td style="text-align:left;">
+0.120000000000001
+</td>
+<td style="text-align:left;">
+31.134
+</td>
+<td style="text-align:left;">
+30.594
+</td>
+<td style="text-align:left;">
+0.539999999999999
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-19
+</td>
+<td style="text-align:left;">
+19
+</td>
+<td style="text-align:left;">
+18.87
+</td>
+<td style="text-align:left;">
+0.129999999999999
+</td>
+<td style="text-align:left;">
+31.215
+</td>
+<td style="text-align:left;">
+31.134
+</td>
+<td style="text-align:left;">
+0.0809999999999995
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-22
+</td>
+<td style="text-align:left;">
+19.2
+</td>
+<td style="text-align:left;">
+19
+</td>
+<td style="text-align:left;">
+0.199999999999999
+</td>
+<td style="text-align:left;">
+31.512
+</td>
+<td style="text-align:left;">
+31.215
+</td>
+<td style="text-align:left;">
+0.297000000000001
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-23
+</td>
+<td style="text-align:left;">
+19.15
+</td>
+<td style="text-align:left;">
+19.2
+</td>
+<td style="text-align:left;">
+-0.0500000000000007
+</td>
+<td style="text-align:left;">
+31.512
+</td>
+<td style="text-align:left;">
+31.512
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<p>Como o Excel não está adequadamente formatado (há células colapsadas e colunas vazias entre os dados) e acabamos com um dado importado muito sujo, há necessidade de limpar, <em>tipar</em> e arrumar
+<a href="http://r4ds.had.co.nz/tidy.html">(data tidying)</a>, deixando-os simples de manipular.</p>
+<pre class="r"><code class="codeblock hljs cs"><span class="meta"># limpando e arrumando (tidying)</span>
+<span class="meta"># primeiro isola o QUAL3</span>
+xls %&gt;% 
+  <span class="keyword">as</span>.tibble() %&gt;% 
+  <span class="keyword">select</span>( <span class="keyword">ref</span>.date = Data, price.close=QUAL3 ) %&gt;% 
+  filter( complete.cases(.) ) %&gt;% 
+  mutate( ticker=<span class="string">"QUAL3"</span>,
+          price.close = <span class="keyword">as</span>.numeric(<span class="keyword">as</span>.character(price.close)) ) -&gt; qual
+
+
+<span class="meta"># despois o RENT3</span>
+xls %&gt;% 
+  <span class="keyword">as</span>.tibble() %&gt;% 
+  <span class="keyword">select</span>( <span class="keyword">ref</span>.date = Data, price.close=RENT3 ) %&gt;% 
+  filter( complete.cases(.) ) %&gt;% 
+  mutate( ticker=<span class="string">"RENT3"</span>,
+          price.close = <span class="keyword">as</span>.numeric(<span class="keyword">as</span>.character(price.close)) ) -&gt; rent
+
+<span class="meta"># Junta ambos</span>
+df.tickers = bind_rows(qual,rent)
+
+<span class="meta"># ficou melhor</span>
+df.tickers %&gt;% 
+  arrange(<span class="keyword">ref</span>.date) %&gt;% 
+  head(<span class="number">10</span>) %&gt;% 
+  kable(caption=<span class="string">"Dados 'Tidy' "</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:tidyingTickers">Table 2: </span>Dados ‘Tidy’
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+ref.date
+</th>
+<th style="text-align:right;">
+price.close
+</th>
+<th style="text-align:left;">
+ticker
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2012-10-10
+</td>
+<td style="text-align:right;">
+19.650
+</td>
+<td style="text-align:left;">
+QUAL3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-10
+</td>
+<td style="text-align:right;">
+31.953
+</td>
+<td style="text-align:left;">
+RENT3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-11
+</td>
+<td style="text-align:right;">
+19.700
+</td>
+<td style="text-align:left;">
+QUAL3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-11
+</td>
+<td style="text-align:right;">
+32.232
+</td>
+<td style="text-align:left;">
+RENT3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-15
+</td>
+<td style="text-align:right;">
+19.870
+</td>
+<td style="text-align:left;">
+QUAL3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-15
+</td>
+<td style="text-align:right;">
+32.124
+</td>
+<td style="text-align:left;">
+RENT3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-16
+</td>
+<td style="text-align:right;">
+19.350
+</td>
+<td style="text-align:left;">
+QUAL3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-16
+</td>
+<td style="text-align:right;">
+31.584
+</td>
+<td style="text-align:left;">
+RENT3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-17
+</td>
+<td style="text-align:right;">
+18.750
+</td>
+<td style="text-align:left;">
+QUAL3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012-10-17
+</td>
+<td style="text-align:right;">
+30.594
+</td>
+<td style="text-align:left;">
+RENT3
+</td>
+</tr>
+</tbody>
+</table>
+<p>Com o <em>dataset</em> mais organizado, vamos visualizar os preços dos ativos importados.</p>
+<pre class="r"><code class="codeblock hljs cs"><span class="meta"># plota o preco dos ativos</span>
+library(ggplot2)
+ggplot(df.tickers,aes(x=<span class="keyword">ref</span>.date, y=price.close, color=ticker)) +
+  geom_line(size=<span class="number">1</span>) + theme_light()</code></pre>
+<p><img src="./Operações Long-Short Cointegração R_files/tickersPlot-1.png" width="672"></p>
+</div>
+<div id="series-nao-estacionarias" class="section level3">
+<h3>Séries Não Estacionárias</h3>
+<p>O primeiro passo é testar se cada uma das séries é não-estacionária, aplicando o teste <a href="https://en.wikipedia.org/wiki/Dickey%E2%80%93Fuller_test">Dickey-Fuller</a> em cada série de preços. A hipótese nula do teste DF é que a série é não-estacionária, portanto neste primeiro teste queremos que a hipótese nula não seja rejeitada.</p>
+<p>Para aplicar o teste DF, precisamos primeiro calcular os valores defasados (<code>lags</code>) de cada série e o <code>delta</code> (diferença entre o preço do dia e o preço do dia anterior) e após isto fazer regressão do <code>delta</code> em função do <code>lag</code>:</p>
+<p><span class="math display"><span class="MathJax_Preview" style="color: inherit; display: none;"></span><span class="mjx-chtml MJXc-display" style="text-align: center;"><span id="MathJax-Element-1-Frame" class="mjx-chtml MathJax_CHTML" tabindex="0" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot; display=&quot;block&quot;&gt;&lt;mi mathvariant=&quot;normal&quot;&gt;&amp;#x0394;&lt;/mi&gt;&lt;msub&gt;&lt;mi&gt;P&lt;/mi&gt;&lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;&lt;mi&gt;t&lt;/mi&gt;&lt;/mrow&gt;&lt;/msub&gt;&lt;mo&gt;=&lt;/mo&gt;&lt;mi&gt;&amp;#x03B1;&lt;/mi&gt;&lt;mo&gt;+&lt;/mo&gt;&lt;mi&gt;&amp;#x03B2;&lt;/mi&gt;&lt;msub&gt;&lt;mi&gt;P&lt;/mi&gt;&lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;&lt;mi&gt;t&lt;/mi&gt;&lt;mo&gt;&amp;#x2212;&lt;/mo&gt;&lt;mn&gt;1&lt;/mn&gt;&lt;/mrow&gt;&lt;/msub&gt;&lt;mo&gt;+&lt;/mo&gt;&lt;mi&gt;&amp;#x03F5;&lt;/mi&gt;&lt;/math&gt;" role="presentation" style="font-size: 125%; text-align: center; position: relative;"><span id="MJXc-Node-1" class="mjx-math" aria-hidden="true"><span id="MJXc-Node-2" class="mjx-mrow"><span id="MJXc-Node-3" class="mjx-mi"><span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.426em; padding-bottom: 0.332em;">Δ</span></span><span id="MJXc-Node-4" class="mjx-msubsup"><span class="mjx-base" style="margin-right: -0.109em;"><span id="MJXc-Node-5" class="mjx-mi"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.473em; padding-bottom: 0.285em; padding-right: 0.109em;">P</span></span></span><span class="mjx-sub" style="font-size: 70.7%; vertical-align: -0.212em; padding-right: 0.071em;"><span id="MJXc-Node-6" class="mjx-texatom" style=""><span id="MJXc-Node-7" class="mjx-mrow"><span id="MJXc-Node-8" class="mjx-mi"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.426em; padding-bottom: 0.285em;">t</span></span></span></span></span></span><span id="MJXc-Node-9" class="mjx-mo MJXc-space3"><span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.096em; padding-bottom: 0.332em;">=</span></span><span id="MJXc-Node-10" class="mjx-mi MJXc-space3"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.238em; padding-bottom: 0.285em;">α</span></span><span id="MJXc-Node-11" class="mjx-mo MJXc-space2"><span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.285em; padding-bottom: 0.426em;">+</span></span><span id="MJXc-Node-12" class="mjx-mi MJXc-space2"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.473em; padding-bottom: 0.473em; padding-right: 0.007em;">β</span></span><span id="MJXc-Node-13" class="mjx-msubsup"><span class="mjx-base" style="margin-right: -0.109em;"><span id="MJXc-Node-14" class="mjx-mi"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.473em; padding-bottom: 0.285em; padding-right: 0.109em;">P</span></span></span><span class="mjx-sub" style="font-size: 70.7%; vertical-align: -0.212em; padding-right: 0.071em;"><span id="MJXc-Node-15" class="mjx-texatom" style=""><span id="MJXc-Node-16" class="mjx-mrow"><span id="MJXc-Node-17" class="mjx-mi"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.426em; padding-bottom: 0.285em;">t</span></span><span id="MJXc-Node-18" class="mjx-mo"><span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.285em; padding-bottom: 0.426em;">−</span></span><span id="MJXc-Node-19" class="mjx-mn"><span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.379em; padding-bottom: 0.332em;">1</span></span></span></span></span></span><span id="MJXc-Node-20" class="mjx-mo MJXc-space2"><span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.285em; padding-bottom: 0.426em;">+</span></span><span id="MJXc-Node-21" class="mjx-mi MJXc-space2"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.191em; padding-bottom: 0.285em;">ϵ</span></span></span></span><span class="MJX_Assistive_MathML MJX_Assistive_MathML_Block" role="presentation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi mathvariant="normal">Δ</mi><msub><mi>P</mi><mrow class="MJX-TeXAtom-ORD"><mi>t</mi></mrow></msub><mo>=</mo><mi>α</mi><mo>+</mo><mi>β</mi><msub><mi>P</mi><mrow class="MJX-TeXAtom-ORD"><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>ϵ</mi></math></span></span></span><script type="math/tex; mode=display" id="MathJax-Element-1">\Delta P_{t} = \alpha + \beta P_{t-1} + \epsilon</script></span></p>
+<p>Após fazer a regressão, o valor chave a ser usado para determinar se a série é não estacionária é o <a href="https://dss.princeton.edu/online_help/analysis/interpreting_regression.htm"><code>t-statistic</code></a> do coeficiente <span class="math inline"><span class="MathJax_Preview" style="color: inherit; display: none;"></span><span id="MathJax-Element-2-Frame" class="mjx-chtml MathJax_CHTML" tabindex="0" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;&lt;mi&gt;&amp;#x03B2;&lt;/mi&gt;&lt;/math&gt;" role="presentation" style="font-size: 125%; position: relative;"><span id="MJXc-Node-22" class="mjx-math" aria-hidden="true"><span id="MJXc-Node-23" class="mjx-mrow"><span id="MJXc-Node-24" class="mjx-mi"><span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.473em; padding-bottom: 0.473em; padding-right: 0.007em;">β</span></span></span></span><span class="MJX_Assistive_MathML" role="presentation"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>β</mi></math></span></span><script type="math/tex" id="MathJax-Element-2">\beta</script></span> obtido, que é o valor do coeficiente dividido pelo desvio padrão. Pode ser pensado como uma medida da precisão com que o coeficiente de regressão é medido. Se um coeficiente é grande comparado ao seu erro padrão, provavelmente é diferente de 0. Esse valor então é confrontado contra uma tabela de referência, que determinará se a série é estacionária ou não.</p>
+<div class="figure">
+<img src="./Operações Long-Short Cointegração R_files/dickey-fuller-table.png" alt="Dickey-Fuller Table">
+<p class="caption">Dickey-Fuller Table</p>
+</div>
+<p>O valor de referência é sensível ao número de pontos usados na regressão. Assim sendo, vamos fazer o <em>fit</em> da regressão linear e obter os valores de referência desta regressão</p>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># esta funcao calcula o delta e o "lag" e entao fit e devolve um modelo</span>
+fitLagModel &lt;- function(dtf){
+  <span class="comment"># pega os datasets de precos de um ticker</span>
+  dtf %&gt;% 
+    <span class="keyword">select</span>( price.close ) %&gt;% <span class="comment"># so interessa o preco de fechametno</span>
+    mutate( price.lag = lag(price.close,<span class="number">1</span>), <span class="comment"># cria um "lag" de um dia</span>
+            price.delta = price.close - price.lag ) %&gt;%  <span class="comment"># delta entre fechamento e lag</span>
+    filter( complete.cases(.) ) %&gt;% <span class="comment"># elimina valores vazios</span>
+    lm( price.lag ~ price.delta, . ) %&gt;% <span class="comment"># fita o modelo</span>
+    <span class="keyword">return</span>()
+}
+
+<span class="comment"># tidyfica alguns parametros do modelo</span>
+library(broom)
+
+<span class="comment"># testes de series estacionarias</span>
+<span class="comment"># para cada ticker fita o modelo linear</span>
+df.tickers %&gt;%
+  group_by(ticker) %&gt;%
+  nest() %&gt;% 
+  mutate ( lagModel = <span class="keyword">map</span>(data, fitLagModel), <span class="comment"># modelo liner do "lag x delta"</span>
+           lm.coefs  = <span class="keyword">map</span>(lagModel,tidy),    <span class="comment"># coeficientes obtidos do modelo</span>
+           lm.glance = <span class="keyword">map</span>(lagModel, glance), <span class="comment"># qualidade do fit</span>
+           lm.anova  = <span class="keyword">map</span>(lagModel, anova),  <span class="comment"># analise de variancia do modelo</span>
+           lm.anova  = <span class="keyword">map</span>(lm.anova, tidy)) -&gt; stat.test</code></pre>
+<p>Então para cada um dos <em>ticker</em>, temos um <em>dataset</em> com as cotações, o modelo fitado, dados dos coeficientes, análise de variação e qualidade do <em>fit</em>. Vamos olhar o valor para cada uma das séries.</p>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># visualizando a qualidade do fit</span>
+stat.test %&gt;% 
+  <span class="keyword">select</span>(ticker, lm.glance) %&gt;% 
+  unnest(lm.glance) %&gt;% 
+  kable(caption = <span class="string">"Qualidade da regressão"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:fitQuality">Table 3: </span>Qualidade da regressão
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+ticker
+</th>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:right;">
+0.0033114
+</td>
+<td style="text-align:right;">
+0.0013220
+</td>
+<td style="text-align:right;">
+2.877734
+</td>
+<td style="text-align:right;">
+1.664528
+</td>
+<td style="text-align:right;">
+0.1975882
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+-1244.397
+</td>
+<td style="text-align:right;">
+2494.793
+</td>
+<td style="text-align:right;">
+2507.455
+</td>
+<td style="text-align:right;">
+4148.957
+</td>
+<td style="text-align:right;">
+501
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:right;">
+0.0069421
+</td>
+<td style="text-align:right;">
+0.0049599
+</td>
+<td style="text-align:right;">
+2.466154
+</td>
+<td style="text-align:right;">
+3.502292
+</td>
+<td style="text-align:right;">
+0.0618665
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+-1166.762
+</td>
+<td style="text-align:right;">
+2339.524
+</td>
+<td style="text-align:right;">
+2352.186
+</td>
+<td style="text-align:right;">
+3047.041
+</td>
+<td style="text-align:right;">
+501
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># visualizando a analise de variancia do modelo</span>
+stat.test %&gt;% 
+  <span class="keyword">select</span>(ticker, lm.anova) %&gt;% 
+  unnest(lm.anova) %&gt;% 
+  kable(caption= <span class="string">"Análise de variação"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:fitAnova">Table 4: </span>Análise de variação
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+ticker
+</th>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+sumsq
+</th>
+<th style="text-align:right;">
+meansq
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+price.delta
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+13.78455
+</td>
+<td style="text-align:right;">
+13.784545
+</td>
+<td style="text-align:right;">
+1.664528
+</td>
+<td style="text-align:right;">
+0.1975882
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+Residuals
+</td>
+<td style="text-align:right;">
+501
+</td>
+<td style="text-align:right;">
+4148.95749
+</td>
+<td style="text-align:right;">
+8.281352
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:left;">
+price.delta
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+21.30065
+</td>
+<td style="text-align:right;">
+21.300652
+</td>
+<td style="text-align:right;">
+3.502292
+</td>
+<td style="text-align:right;">
+0.0618665
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:left;">
+Residuals
+</td>
+<td style="text-align:right;">
+501
+</td>
+<td style="text-align:right;">
+3047.04060
+</td>
+<td style="text-align:right;">
+6.081917
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs cs"><span class="meta"># coeficientes obtidos</span>
+stat.test %&gt;% 
+  <span class="keyword">select</span>(ticker, lm.coefs) %&gt;% 
+  unnest(lm.coefs) %&gt;% 
+  kable(caption=<span class="string">"Coeficientes da regressão"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:fitCoefs">Table 5: </span>Coeficientes da regressão
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+ticker
+</th>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+std.error
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+21.368836
+</td>
+<td style="text-align:right;">
+0.1283564
+</td>
+<td style="text-align:right;">
+166.480526
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+price.delta
+</td>
+<td style="text-align:right;">
+-0.447896
+</td>
+<td style="text-align:right;">
+0.3471615
+</td>
+<td style="text-align:right;">
+-1.290166
+</td>
+<td style="text-align:right;">
+0.1975882
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+33.074075
+</td>
+<td style="text-align:right;">
+0.1099886
+</td>
+<td style="text-align:right;">
+300.704459
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:left;">
+price.delta
+</td>
+<td style="text-align:right;">
+-0.423032
+</td>
+<td style="text-align:right;">
+0.2260461
+</td>
+<td style="text-align:right;">
+-1.871441
+</td>
+<td style="text-align:right;">
+0.0618665
+</td>
+</tr>
+</tbody>
+</table>
+<p>Então comparamos os <code>t-statistics</code> obtido para cada um dos coeficientes.</p>
+<pre class="r"><code class="codeblock hljs cs"><span class="meta"># isola o coeficient dos betas dos modelos</span>
+stat.test %&gt;% 
+  <span class="keyword">select</span>(ticker, lm.coefs) %&gt;% 
+  unnest(lm.coefs) %&gt;% 
+  <span class="keyword">select</span>(ticker, term, estimate, statistic, p.<span class="keyword">value</span>) %&gt;%
+  filter( term!=<span class="string">"(Intercept)"</span> ) %&gt;% 
+  <span class="keyword">select</span>(-term) %&gt;% 
+  inner_join( count(df.tickers , ticker), <span class="keyword">by</span>=<span class="string">"ticker"</span>) -&gt; coefs
+
+<span class="meta"># mostra eles</span>
+coefs %&gt;% 
+  kable(caption=<span class="string">"Coeficientes da regressão"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:tstats">Table 6: </span>Coeficientes da regressão
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+ticker
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+n
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:right;">
+-0.447896
+</td>
+<td style="text-align:right;">
+-1.290166
+</td>
+<td style="text-align:right;">
+0.1975882
+</td>
+<td style="text-align:right;">
+504
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:right;">
+-0.423032
+</td>
+<td style="text-align:right;">
+-1.871441
+</td>
+<td style="text-align:right;">
+0.0618665
+</td>
+<td style="text-align:right;">
+504
+</td>
+</tr>
+</tbody>
+</table>
+<p>Para QUAL3 encontramos o valor de <strong>-1.29</strong> e para RENT3 encontramos <strong>-1.871</strong> para ~500 amostras. Ambos os valores estão abaixo (em módulo) dos valores de referência na tabela Dickey-Fuller (<strong>-2.87</strong>), mostrando que ambas as séries são “não-estacionárias”.</p>
+</div>
+</div>
+<div id="teste-de-cointegracao-metodologia-de-engle-granger" class="section level2">
+<h2>Teste de Cointegração (metodologia de Engle-Granger)</h2>
+<p>A metodologia de <a href="https://www.empiwifo.uni-freiburg.de/lehre-teaching-1/winter-term/makrookonometrie/methodology.pdf">Engle-Granger</a> consiste em dois passos: primeiro fazemos uma regressão linear de uma série temporal contra a outra. Em seguida, aplicamos um teste de estacionariedade (como por exemplo o teste de Dickey-Fuller) nos resíduos desta regressão. Se os resíduos forem estacionários, isto significa que encontramos a combinação linear tal que as duas séries são cointegradas.</p>
+<p>Então vamos avaliar a combinação linear entre QUAL3 e RENT3</p>
+<pre class="r"><code class="codeblock hljs cs">df.tickers %&gt;% 
+  spread(key=ticker, <span class="keyword">value</span>=price.close) %&gt;% 
+  ggplot(aes(x=RENT3, y=QUAL3)) +
+    geom_point(size=<span class="number">2</span>, alpha=<span class="number">.5</span>) + theme_light()</code></pre>
+<p><img src="./Operações Long-Short Cointegração R_files/plotCombinacao-1.png" width="672"></p>
+<pre class="r"><code class="codeblock hljs bash"><span class="comment"># faz a composicao para detectar a cointegração</span>
+<span class="comment"># fitando um modelo de um ativo contra outro</span>
+df.tickers %&gt;% 
+  spread(key=ticker, value=price.close) %&gt;% <span class="comment"># pivota para ref.date, qual3 e rent3</span>
+  lm(QUAL3 ~ RENT3, .) -&gt; coint <span class="comment"># fita o modelo</span>
+
+<span class="comment"># avalia valores obtidos no modelo</span>
+coint %&gt;%
+  glance() %&gt;% 
+  kable(caption = <span class="string">"Qualidade da regressão"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:cointegradion">Table 7: </span>Qualidade da regressão
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+value
+</td>
+<td style="text-align:right;">
+0.7743701
+</td>
+<td style="text-align:right;">
+0.7739206
+</td>
+<td style="text-align:right;">
+1.369506
+</td>
+<td style="text-align:right;">
+1722.882
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+-872.6258
+</td>
+<td style="text-align:right;">
+1751.252
+</td>
+<td style="text-align:right;">
+1763.919
+</td>
+<td style="text-align:right;">
+941.5243
+</td>
+<td style="text-align:right;">
+502
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs nginx"><span class="comment"># avalia dados de variancia</span>
+<span class="attribute">coint</span> %&gt;%
+  anova() %&gt;%
+  tidy() %&gt;%  
+  kable(caption = <span class="string">"Análise de Variacao"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:cointAnova">Table 8: </span>Análise de Variacao
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+sumsq
+</th>
+<th style="text-align:right;">
+meansq
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3231.3452
+</td>
+<td style="text-align:right;">
+3231.345212
+</td>
+<td style="text-align:right;">
+1722.882
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Residuals
+</td>
+<td style="text-align:right;">
+502
+</td>
+<td style="text-align:right;">
+941.5243
+</td>
+<td style="text-align:right;">
+1.875546
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs nginx"><span class="comment"># mostra os coeficientes do modelo</span>
+<span class="attribute">coint</span> %&gt;% 
+  tidy() %&gt;%  
+  kable(caption = <span class="string">"Coeficientes da Regressao"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:cointCoefs">Table 9: </span>Coeficientes da Regressao
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+std.error
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+-12.466815
+</td>
+<td style="text-align:right;">
+0.8174937
+</td>
+<td style="text-align:right;">
+-15.25004
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RENT3
+</td>
+<td style="text-align:right;">
+1.022958
+</td>
+<td style="text-align:right;">
+0.0246451
+</td>
+<td style="text-align:right;">
+41.50761
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<p>E aplicar teste DF nos resíduos da regressão.</p>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># monta um dataset para avaliar os residuos</span>
+<span class="comment"># nao eh necessario mas fica mais facil de visualizar</span>
+df.tickers %&gt;%
+  filter( ticker==<span class="string">"QUAL3"</span> ) %&gt;% 
+  <span class="keyword">select</span>(ticker, ref.date, price.close) %&gt;% 
+  bind_cols(
+    tibble(
+      predicted = coint$fitted.values,
+      residuals = coint$residuals
+    )    
+  ) %&gt;% 
+  mutate( lagRes = lag(residuals,<span class="number">1</span>),
+          deltaRes = residuals - lagRes ) -&gt; coint.ds
+
+<span class="comment"># mosta os dados</span>
+coint.ds %&gt;% 
+  head(<span class="number">10</span>) %&gt;% 
+  kable(caption = <span class="string">"Preparacao dos Resíduos para fazer teste Dickey-Fuller"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:cointDF">Table 10: </span>Preparacao dos Resíduos para fazer teste Dickey-Fuller
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+ticker
+</th>
+<th style="text-align:left;">
+ref.date
+</th>
+<th style="text-align:right;">
+price.close
+</th>
+<th style="text-align:right;">
+predicted
+</th>
+<th style="text-align:right;">
+residuals
+</th>
+<th style="text-align:right;">
+lagRes
+</th>
+<th style="text-align:right;">
+deltaRes
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-10
+</td>
+<td style="text-align:right;">
+19.65
+</td>
+<td style="text-align:right;">
+20.21976
+</td>
+<td style="text-align:right;">
+-0.5697610
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-11
+</td>
+<td style="text-align:right;">
+19.70
+</td>
+<td style="text-align:right;">
+20.50517
+</td>
+<td style="text-align:right;">
+-0.8051662
+</td>
+<td style="text-align:right;">
+-0.5697610
+</td>
+<td style="text-align:right;">
+-0.2354053
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-15
+</td>
+<td style="text-align:right;">
+19.87
+</td>
+<td style="text-align:right;">
+20.39469
+</td>
+<td style="text-align:right;">
+-0.5246868
+</td>
+<td style="text-align:right;">
+-0.8051662
+</td>
+<td style="text-align:right;">
+0.2804795
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-16
+</td>
+<td style="text-align:right;">
+19.35
+</td>
+<td style="text-align:right;">
+19.84229
+</td>
+<td style="text-align:right;">
+-0.4922895
+</td>
+<td style="text-align:right;">
+-0.5246868
+</td>
+<td style="text-align:right;">
+0.0323973
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-17
+</td>
+<td style="text-align:right;">
+18.75
+</td>
+<td style="text-align:right;">
+18.82956
+</td>
+<td style="text-align:right;">
+-0.0795611
+</td>
+<td style="text-align:right;">
+-0.4922895
+</td>
+<td style="text-align:right;">
+0.4127284
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-18
+</td>
+<td style="text-align:right;">
+18.87
+</td>
+<td style="text-align:right;">
+19.38196
+</td>
+<td style="text-align:right;">
+-0.5119584
+</td>
+<td style="text-align:right;">
+-0.0795611
+</td>
+<td style="text-align:right;">
+-0.4323973
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-19
+</td>
+<td style="text-align:right;">
+19.00
+</td>
+<td style="text-align:right;">
+19.46482
+</td>
+<td style="text-align:right;">
+-0.4648180
+</td>
+<td style="text-align:right;">
+-0.5119584
+</td>
+<td style="text-align:right;">
+0.0471404
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-22
+</td>
+<td style="text-align:right;">
+19.20
+</td>
+<td style="text-align:right;">
+19.76864
+</td>
+<td style="text-align:right;">
+-0.5686365
+</td>
+<td style="text-align:right;">
+-0.4648180
+</td>
+<td style="text-align:right;">
+-0.1038185
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-23
+</td>
+<td style="text-align:right;">
+19.15
+</td>
+<td style="text-align:right;">
+19.76864
+</td>
+<td style="text-align:right;">
+-0.6186365
+</td>
+<td style="text-align:right;">
+-0.5686365
+</td>
+<td style="text-align:right;">
+-0.0500000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+QUAL3
+</td>
+<td style="text-align:left;">
+2012-10-24
+</td>
+<td style="text-align:right;">
+19.99
+</td>
+<td style="text-align:right;">
+19.11497
+</td>
+<td style="text-align:right;">
+0.8750336
+</td>
+<td style="text-align:right;">
+-0.6186365
+</td>
+<td style="text-align:right;">
+1.4936701
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs css"># <span class="selector-tag">fit</span> <span class="selector-tag">dos</span> <span class="selector-tag">residuos</span>
+<span class="selector-tag">coint</span><span class="selector-class">.ds</span> %&gt;% 
+  <span class="selector-tag">lm</span>(<span class="selector-tag">lagRes</span> ~ <span class="selector-tag">deltaRes</span>, .) <span class="selector-tag">-</span>&gt; <span class="selector-tag">coint</span><span class="selector-class">.lm</span></code></pre>
+<pre class="r"><code class="codeblock hljs apache"><span class="comment"># avalia valores obtidos no modelo</span>
+<span class="attribute">coint</span>.lm %&gt;%
+  <span class="attribute">glance</span>() %&gt;% 
+  <span class="attribute">kable</span>(caption = <span class="string">"Qualidade da regressão"</span>) %&gt;%
+  <span class="attribute">kable_styling</span>(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:resGlance">Table 11: </span>Qualidade da regressão
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+value
+</td>
+<td style="text-align:right;">
+0.0405699
+</td>
+<td style="text-align:right;">
+0.0386549
+</td>
+<td style="text-align:right;">
+1.341484
+</td>
+<td style="text-align:right;">
+21.18501
+</td>
+<td style="text-align:right;">
+5.3e-06
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+-860.4938
+</td>
+<td style="text-align:right;">
+1726.988
+</td>
+<td style="text-align:right;">
+1739.649
+</td>
+<td style="text-align:right;">
+901.5899
+</td>
+<td style="text-align:right;">
+501
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs apache"><span class="comment"># variancia do modelo dos residuos</span>
+<span class="attribute">coint</span>.lm %&gt;%
+  <span class="attribute">anova</span>() %&gt;%
+  <span class="attribute">tidy</span>() %&gt;%  
+  <span class="attribute">kable</span>(caption = <span class="string">"Análise de Variacao"</span>) %&gt;%
+  <span class="attribute">kable_styling</span>(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:resAnova">Table 12: </span>Análise de Variacao
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+sumsq
+</th>
+<th style="text-align:right;">
+meansq
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+deltaRes
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+38.12413
+</td>
+<td style="text-align:right;">
+38.124130
+</td>
+<td style="text-align:right;">
+21.18501
+</td>
+<td style="text-align:right;">
+5.3e-06
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Residuals
+</td>
+<td style="text-align:right;">
+501
+</td>
+<td style="text-align:right;">
+901.58992
+</td>
+<td style="text-align:right;">
+1.799581
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs apache"><span class="comment"># coeficientes do modelo dos residuos</span>
+<span class="attribute">coint</span>.lm %&gt;% 
+  <span class="attribute">tidy</span>() %&gt;%  
+  <span class="attribute">kable</span>(caption = <span class="string">"Coeficientes da Regressao"</span>) %&gt;%
+  <span class="attribute">kable_styling</span>(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:resCoef">Table 13: </span>Coeficientes da Regressao
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+std.error
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+0.0019098
+</td>
+<td style="text-align:right;">
+0.0598141
+</td>
+<td style="text-align:right;">
+0.0319291
+</td>
+<td style="text-align:right;">
+0.9745413
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+deltaRes
+</td>
+<td style="text-align:right;">
+-0.4952238
+</td>
+<td style="text-align:right;">
+0.1075938
+</td>
+<td style="text-align:right;">
+-4.6027174
+</td>
+<td style="text-align:right;">
+0.0000053
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code class="codeblock hljs nginx"><span class="comment"># usado para mostrar no texto</span>
+<span class="attribute">tstat</span> &lt;- coint.lm %&gt;% tidy %&gt;% filter(term==<span class="string">"deltaRes"</span>) %&gt;% pull(statistic)</code></pre>
+<p>Desta vez, o <code>t-stat</code> obtido foi de <strong>-4.603</strong>, muito além (em módulo) dos valores para a tabela de significância para 500 ou mais amostras (<strong>-2.87</strong>). Neste caso confirmando que a hipótese de que a série é estacionária, e portanto os pares estão cointegrados.</p>
+</div>
+<div id="trading-long-short" class="section level2">
+<h2>Trading Long-Short</h2>
+<div id="spread" class="section level3">
+<h3>Spread</h3>
+<p>O gráfico abaixo apresenta a evolução do <em>spread</em> ao longo do tempo, com duas bandas representando -2 e 2 vezes o desvio padrão dos resíduos. Vemos que, apesar de os resíduos apresentarem certa persistência, comportam-se de maneira aparentemente desejável: flutuam razoavelmente ao redor da média, visitando-a com certa frequência.</p>
+<pre class="r"><code class="codeblock hljs bash"><span class="comment"># plot</span>
+
+<span class="comment"># banda +/- 2 SD</span>
+sd.res &lt;- sd(coint.ds<span class="variable">$residuals</span>)
+
+<span class="comment"># residuos e banda</span>
+coint.ds %&gt;% 
+  ggplot(aes(x=ref.date, y=residuals)) + 
+  geom_line(color=<span class="string">"blue"</span>,size=1) +
+  geom_hline(yintercept =  2*sd.res, color=<span class="string">"red"</span>, linetype=2) +
+  geom_hline(yintercept = -2*sd.res, color=<span class="string">"red"</span>, linetype=2) +
+  theme_light()</code></pre>
+<p><img src="./Operações Long-Short Cointegração R_files/spreadPlot-1.png" width="672"></p>
+<p>Uma regra possível de operação consistiria em vender o par quando o resíduo estiver acima da banda, e comprar o par quando estiver abaixo da banda. O trade pode ser encerrado quando o par voltar a média ou a um percentual qualquer da média.</p>
+</div>
+<div id="detectando-operacoes" class="section level3">
+<h3>Detectando Operações</h3>
+<p>Seguindo a estratégia acima, usamos as transições de banda e pela média para detectar os pontos de entrada e saída de operações long e short.</p>
+<pre class="r"><code class="codeblock hljs cs"><span class="meta"># estrategia de negociacao, abrir ao -/+ 2 * sd e fechar no 0</span>
+startPar &lt;- <span class="number">2</span>*sd.res
+closePar &lt;- <span class="number">0</span>
+
+<span class="meta"># detecta os pontos de entrada e saida nas operacoes de short</span>
+coint.ds %&gt;% 
+  mutate(operation=case_when(
+    lagRes &lt; startPar &amp; residuals &gt;= startPar   ~ <span class="string">"short_start"</span>, <span class="meta"># cruzou o gatilho de start</span>
+    lagRes &gt; closePar &amp; residuals &lt;= closePar    ~ <span class="string">"short_stop"</span>  <span class="meta"># cruzou o gatilho de stop</span>
+  )) %&gt;%
+  filter( !<span class="keyword">is</span>.na(operation) ) %&gt;% 
+  <span class="meta"># elminia cruzamentos duplicado (quando a operacao ja esta aberta)</span>
+  mutate( operation.lag = lag(operation,<span class="number">1</span>) ) %&gt;% 
+  <span class="keyword">select</span>( <span class="keyword">ref</span>.date, residuals, lagRes, operation, operation.lag ) %&gt;% 
+  filter( operation!=operation.lag ) %&gt;% 
+  <span class="keyword">select</span>( -operation.lag) -&gt; ops.<span class="keyword">short</span>
+
+<span class="meta"># detecta pontos de entrada e saida nas operacoes de long</span>
+coint.ds %&gt;% 
+  mutate(operation=case_when(
+    lagRes &gt; -startPar &amp; residuals &lt;= -startPar ~ <span class="string">"long_start"</span>,
+    lagRes &lt; -closePar &amp; residuals &gt;= -closePar ~ <span class="string">"long_stop"</span>
+  )) %&gt;%
+  filter( !<span class="keyword">is</span>.na(operation) ) %&gt;% 
+  mutate( operation.lag = lag(operation,<span class="number">1</span>) ) %&gt;% 
+  <span class="keyword">select</span>( <span class="keyword">ref</span>.date, residuals, lagRes, operation, operation.lag ) %&gt;% 
+  filter( operation!=operation.lag ) %&gt;% 
+  <span class="keyword">select</span>( -operation.lag) -&gt; ops.<span class="keyword">long</span>
+
+<span class="meta"># junta as operacoes</span>
+operations &lt;- bind_rows(ops.<span class="keyword">short</span>, ops.<span class="keyword">long</span>)
+
+<span class="meta"># residuos e banda</span>
+coint.ds %&gt;% 
+  ggplot(aes(x=<span class="keyword">ref</span>.date, y=residuals)) + 
+  geom_line(color=<span class="string">"blue"</span>,size=<span class="number">1</span>, alpha=<span class="number">0.3</span>) +
+  geom_hline(yintercept =  startPar, color=<span class="string">"red"</span>, linetype=<span class="number">2</span>, alpha=<span class="number">0.5</span>) +
+  geom_hline(yintercept =  closePar, color=<span class="string">"blue"</span>, linetype=<span class="number">2</span>, alpha=<span class="number">0.5</span>) +
+  geom_hline(yintercept = -closePar, color=<span class="string">"blue"</span>, linetype=<span class="number">2</span>, alpha=<span class="number">0.5</span>) +
+  geom_hline(yintercept = -startPar, color=<span class="string">"red"</span>, linetype=<span class="number">2</span>, alpha=<span class="number">0.5</span>) +
+  geom_vline(data=operations, 
+             mapping=aes(xintercept = <span class="keyword">ref</span>.date, color=operation),
+             size=<span class="number">1</span>, linetype=<span class="number">1</span>) +
+  theme_light() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())</code></pre>
+<p><img src="./Operações Long-Short Cointegração R_files/startOperations-1.png" width="672"></p>
+<p>A partir dos pontos de entrada e saída do par detectados, podemos então compor a série de operações.</p>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># junta os pares operados  pares</span>
+operations %&gt;% 
+  arrange(ref.date) %&gt;% 
+  mutate( opLag = lead(operation, <span class="number">1</span>),
+          <span class="keyword">open</span>=ref.date,
+          <span class="keyword">close</span> = lead(ref.date,<span class="number">1</span>) ) %&gt;% 
+  filter( (operation==<span class="string">"short_start"</span> &amp; opLag==<span class="string">"short_stop"</span>) |
+          (operation==<span class="string">"long_start"</span> &amp; opLag==<span class="string">"long_stop"</span>) ) %&gt;% 
+  <span class="keyword">select</span>(-ref.date, -residuals, -lagRes, -opLag) %&gt;% 
+  mutate( operation=case_when(
+    operation==<span class="string">"short_start"</span> ~ <span class="string">"short"</span>,
+    operation==<span class="string">"long_start"</span>  ~ <span class="string">"long"</span>
+  ) ) %&gt;% 
+  mutate( life.span = round(lubridate::interval(<span class="keyword">open</span>, <span class="keyword">close</span>)/days(<span class="number">1</span>)) )-&gt; operations
+
+operations %&gt;%  
+  kable(caption = <span class="string">"Operacoes Cointegradas"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ops">Table 14: </span>Operacoes Cointegradas
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+operation
+</th>
+<th style="text-align:left;">
+open
+</th>
+<th style="text-align:left;">
+close
+</th>
+<th style="text-align:right;">
+life.span
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2012-11-12
+</td>
+<td style="text-align:left;">
+2012-11-29
+</td>
+<td style="text-align:right;">
+17
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long
+</td>
+<td style="text-align:left;">
+2013-02-13
+</td>
+<td style="text-align:left;">
+2013-02-20
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long
+</td>
+<td style="text-align:left;">
+2013-07-11
+</td>
+<td style="text-align:left;">
+2013-08-20
+</td>
+<td style="text-align:right;">
+40
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2014-02-04
+</td>
+<td style="text-align:left;">
+2014-02-18
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2014-03-07
+</td>
+<td style="text-align:left;">
+2014-04-22
+</td>
+<td style="text-align:right;">
+46
+</td>
+</tr>
+</tbody>
+</table>
+<p>Com a tabela de operações, podemos simular os ganhos de operação, lembrando que quando o par é vendido abre-se simultaneamente uma posição vendida na primeira ação e comprada na segunda ação e a operação oposta é realizada quando o par é comprado.</p>
+<p>Neste sentido vamos recuperar os valores da cotação de QUAL3 e RENT3 nas datas de abertura e fechamento de operações.</p>
+<pre class="r"><code class="codeblock hljs cs"><span class="meta"># precos de abertura</span>
+operations %&gt;%
+  <span class="keyword">select</span>( open ) %&gt;% 
+  inner_join(df.tickers, <span class="keyword">by</span>=c(<span class="string">"open"</span>=<span class="string">"ref.date"</span>)) %&gt;% 
+  spread(key = ticker, <span class="keyword">value</span>=price.close) %&gt;% 
+  set_names(c(<span class="string">"open"</span>,<span class="string">"QUAL3.SA.OPEN"</span>,<span class="string">"RENT3.SA.OPEN"</span>)) -&gt; prices.open
+
+<span class="meta"># precos de fechamento</span>
+operations %&gt;%
+  <span class="keyword">select</span>( close ) %&gt;% 
+  inner_join(df.tickers, <span class="keyword">by</span>=c(<span class="string">"close"</span>=<span class="string">"ref.date"</span>)) %&gt;% 
+  spread(key = ticker, <span class="keyword">value</span>=price.close) %&gt;% 
+  set_names(c(<span class="string">"close"</span>,<span class="string">"QUAL3.SA.CLOSE"</span>,<span class="string">"RENT3.SA.CLOSE"</span>)) -&gt; prices.close
+
+<span class="meta"># monta operacao + precos</span>
+operations %&gt;%
+  inner_join(prices.open, <span class="keyword">by</span>=<span class="string">"open"</span>) %&gt;% 
+  inner_join(prices.close, <span class="keyword">by</span>=<span class="string">"close"</span>) -&gt; op.results
+
+op.results %&gt;% 
+  kable(caption = <span class="string">"Cotações do par integrado"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-1">Table 15: </span>Cotações do par integrado
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+operation
+</th>
+<th style="text-align:left;">
+open
+</th>
+<th style="text-align:left;">
+close
+</th>
+<th style="text-align:right;">
+life.span
+</th>
+<th style="text-align:right;">
+QUAL3.SA.OPEN
+</th>
+<th style="text-align:right;">
+RENT3.SA.OPEN
+</th>
+<th style="text-align:right;">
+QUAL3.SA.CLOSE
+</th>
+<th style="text-align:right;">
+RENT3.SA.CLOSE
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2012-11-12
+</td>
+<td style="text-align:left;">
+2012-11-29
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+22.40
+</td>
+<td style="text-align:right;">
+31.017
+</td>
+<td style="text-align:right;">
+19.99
+</td>
+<td style="text-align:right;">
+32.511
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long
+</td>
+<td style="text-align:left;">
+2013-02-13
+</td>
+<td style="text-align:left;">
+2013-02-20
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+19.50
+</td>
+<td style="text-align:right;">
+34.582
+</td>
+<td style="text-align:right;">
+21.50
+</td>
+<td style="text-align:right;">
+32.914
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long
+</td>
+<td style="text-align:left;">
+2013-07-11
+</td>
+<td style="text-align:left;">
+2013-08-20
+</td>
+<td style="text-align:right;">
+40
+</td>
+<td style="text-align:right;">
+15.03
+</td>
+<td style="text-align:right;">
+30.311
+</td>
+<td style="text-align:right;">
+17.37
+</td>
+<td style="text-align:right;">
+29.026
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2014-02-04
+</td>
+<td style="text-align:left;">
+2014-02-18
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+21.00
+</td>
+<td style="text-align:right;">
+29.657
+</td>
+<td style="text-align:right;">
+19.60
+</td>
+<td style="text-align:right;">
+31.387
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2014-03-07
+</td>
+<td style="text-align:left;">
+2014-04-22
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+20.85
+</td>
+<td style="text-align:right;">
+29.806
+</td>
+<td style="text-align:right;">
+22.47
+</td>
+<td style="text-align:right;">
+34.571
+</td>
+</tr>
+</tbody>
+</table>
+<p>É possível visualizar as operações de cada um dos ativos na cotação dos mesmos.</p>
+<pre class="r"><code class="codeblock hljs perl"><span class="comment"># plota os ativos e as operacoes</span>
+ggplot() +
+  geom_line(data=df.tickers, 
+            aes(<span class="keyword">x</span>=ref.date, <span class="keyword">y</span>=price.close, color=ticker),size=<span class="number">1</span>) +
+  geom_rect(data=op.results,
+            aes(xmin=<span class="keyword">open</span>, ymin=QUAL3.SA.OPEN,
+                xmax=<span class="keyword">close</span>, ymax=QUAL3.SA.CLOSE,
+                fill=ifelse(QUAL3.SA.OPEN&lt;QUAL3.SA.CLOSE,<span class="string">"green"</span>,<span class="string">"purple"</span>)),
+                alpha=<span class="number">0</span>.<span class="number">35</span>, show.legend = F) +
+    geom_rect(data=op.results,
+            aes(xmin=<span class="keyword">open</span>, ymin=RENT3.SA.OPEN,
+                xmax=<span class="keyword">close</span>, ymax=RENT3.SA.CLOSE,
+                fill=ifelse(RENT3.SA.OPEN&lt;RENT3.SA.CLOSE,<span class="string">"green"</span>,<span class="string">"purple"</span>)),
+                alpha=<span class="number">0</span>.<span class="number">35</span>, show.legend = F) +
+  theme_light() </code></pre>
+<p><img src="./Operações Long-Short Cointegração R_files/unnamed-chunk-2-1.png" width="672"></p>
+<p>Com as cotações na mão vamos simular uma operação cointegrada com cash neutro, ou seja, o volume financeiro comprado é o mesmo valor vendido, nesta simulação usaremos R$1000,00 em cada uma dos dois ativos, e vamos avaliar o rendimento das mesmas.</p>
+<pre class="r"><code class="codeblock hljs nginx"><span class="comment"># define o capital investido</span>
+<span class="attribute">k</span> &lt;- <span class="number">2000</span>
+
+<span class="comment"># calculo dos rendimentos</span>
+op.results %&gt;% 
+  <span class="comment"># calcula o volume de cada ativo comprado/vendido correspondente ao valor do capital</span>
+  mutate( vol.qual3 = round(<span class="number">0</span>.<span class="number">5</span>*k/QUAL3.SA.OPEN),
+          vol.rent3 = round(<span class="number">0</span>.<span class="number">5</span>*k/RENT3.SA.OPEN) ) %&gt;% 
+  <span class="comment"># calcula o saldo $$ entre vendido e comprado dependendo da direção da operação</span>
+  mutate( entrada = case_when(
+    operation == <span class="string">"short"</span> <span class="regexp">~ round(vol.qual3*QUAL3.SA.OPEN-vol.rent3*RENT3.SA.OPEN,2),</span>
+    operation == <span class="string">"long"</span>  <span class="regexp">~ round(vol.rent3*RENT3.SA.OPEN-vol.qual3*QUAL3.SA.OPEN,2)</span>
+  )) %&gt;% 
+  <span class="comment"># calcula o saldo $$ para fechar a operação</span>
+  mutate( saida = case_when(
+    operation == <span class="string">"short"</span> <span class="regexp">~ round(vol.rent3*RENT3.SA.CLOSE-vol.qual3*QUAL3.SA.CLOSE,2),</span>
+    operation == <span class="string">"long"</span>  <span class="regexp">~ round(vol.qual3*QUAL3.SA.CLOSE-vol.rent3*RENT3.SA.CLOSE,2)</span>
+  )) %&gt;% 
+  <span class="comment"># calcula o retorno em função do capital total investido</span>
+  mutate(
+    retorno = (saida-entrada)/k
+  ) -&gt; results
+
+results %&gt;% 
+  <span class="literal">select</span>(operation, open, close, entrada, saida, retorno) %&gt;% 
+  kable(caption = <span class="string">"Retorno obtido"</span>) %&gt;%
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:cashNeutro">Table 16: </span>Retorno obtido
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+operation
+</th>
+<th style="text-align:left;">
+open
+</th>
+<th style="text-align:left;">
+close
+</th>
+<th style="text-align:right;">
+entrada
+</th>
+<th style="text-align:right;">
+saida
+</th>
+<th style="text-align:right;">
+retorno
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2012-11-12
+</td>
+<td style="text-align:left;">
+2012-11-29
+</td>
+<td style="text-align:right;">
+15.46
+</td>
+<td style="text-align:right;">
+140.80
+</td>
+<td style="text-align:right;">
+0.062670
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long
+</td>
+<td style="text-align:left;">
+2013-02-13
+</td>
+<td style="text-align:left;">
+2013-02-20
+</td>
+<td style="text-align:right;">
+8.38
+</td>
+<td style="text-align:right;">
+141.99
+</td>
+<td style="text-align:right;">
+0.066805
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+long
+</td>
+<td style="text-align:left;">
+2013-07-11
+</td>
+<td style="text-align:left;">
+2013-08-20
+</td>
+<td style="text-align:right;">
+-6.75
+</td>
+<td style="text-align:right;">
+205.93
+</td>
+<td style="text-align:right;">
+0.106340
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2014-02-04
+</td>
+<td style="text-align:left;">
+2014-02-18
+</td>
+<td style="text-align:right;">
+-0.34
+</td>
+<td style="text-align:right;">
+126.36
+</td>
+<td style="text-align:right;">
+0.063350
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+short
+</td>
+<td style="text-align:left;">
+2014-03-07
+</td>
+<td style="text-align:left;">
+2014-04-22
+</td>
+<td style="text-align:right;">
+-12.60
+</td>
+<td style="text-align:right;">
+96.85
+</td>
+<td style="text-align:right;">
+0.054725
+</td>
+</tr>
+</tbody>
+</table>
+<p>Vale ressaltar que as <code>entradas</code> mostrados na tabela corresponde a diferença ao balanço líquido de capital, já que nem sempre é possível “casar” exatamente o mesmo valor dado o valor unitário das ações. Já as <code>saídas</code> corresponde saldo obtido para zerar as operações de long+short, o que em tese, corresponde o ganho obtido.</p>
+<p>Já o <code>rendimento</code> é calculado com base no valor obtido sobre o capital total investido, na nossa simulação R$2000,00, ou seja, R$1000,00 para cada operação e o resultado total:</p>
+<pre class="r"><code class="codeblock hljs nginx"><span class="attribute">results</span> %&gt;% 
+  summarise( saldoEntrada = sum(entrada,na.rm = T),
+             saldoSaida   = sum(saida,na.rm = T)) %&gt;% 
+  t() %&gt;% 
+  kable(caption=<span class="string">"Resultado"</span>) %&gt;% 
+  kable_styling(bootstrap_options = <span class="string">"striped"</span>, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:totalResult">Table 17: </span>Resultado
+</caption>
+<tbody>
+<tr>
+<td style="text-align:left;">
+saldoEntrada
+</td>
+<td style="text-align:right;">
+4.15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+saldoSaida
+</td>
+<td style="text-align:right;">
+711.93
+</td>
+</tr>
+</tbody>
+</table>
+<p>Como simulamos as operações usando a estratégia <a href="https://www.investopedia.com/terms/c/cash-neutral.asp"><em>cash-neutral</em></a>, em teoria poderíamos manter o capital total investido em Tesouro Direto, LCAs ou LCI e usá-lo como garantia, permitindo assim que as operações pudessem sere feitas com muito pouco dinheiro investido. No cenário simulado foi possível obter cerca de R$700,00 dos R$2000,00 reais em uma janela de dois anos (35% de rendimento bruto), o que parece bem promissor.</p>
+<p>Cabe lembrar que não acrescentamos os custos de operação, do aluguel de ações ou de tributos, o que poderiam alterar significativamente o resultado final. Tema esse que ficará para um próximo post.</p>
+</div>
+</div>
+<div id="conclusao" class="section level2">
+<h2>Conclusão</h2>
+<p>No contexto de operações com pares de ativos (<em>pair trading</em>), a existência de uma relação de cointegração entre as séries de preços de dois ativos significa que pode ser possível realizar operações lucrativas de arbitragem. Reproduzimos neste <a href="https://rmarkdown.rstudio.com/r_notebooks">R-Notebook</a> o passo-a-passo para encontrar ativos financeiros cointegrados e identificar os pontos de entrada de operações Long e Short, bem como, avaliar os resultados dessa estratégia de investimento num modelo simplificado.</p>
+</div>
+<div id="referencias" class="section level2">
+<h2>Referências</h2>
+<ol style="list-style-type: decimal">
+<li>Moura, Guilherme V. e Caldeira, João F. - <strong>Seleção de uma Carteira de Pares de Ações Usando Cointegração: Uma Estrategia de Arbitragem Estatística</strong> - <a href="https://www.scribd.com/document/237462625/4785-19806-1-PB" class="uri">https://www.scribd.com/document/237462625/4785-19806-1-PB</a></li>
+<li>Caldeira, João F. - <strong>Arbitragem Estatística, Estratégia Long-Short Pairs Trading, Abordagem com Cointegração Aplicada ao Mercado de Ações Brasileiro</strong> - <a href="http://www.anpec.org.br/revista/vol14/vol14n1p521_546.pdf" class="uri">http://www.anpec.org.br/revista/vol14/vol14n1p521_546.pdf</a></li>
+<li><a href="https://drnickel.wordpress.com/">Blog do Dr.&nbsp;Nickel</a> - <strong>Long-Short através de Cointegração</strong> – <a href="https://drnickel.wordpress.com/2015/03/15/long-short-atraves-de-cointegracao-parte-1/">Parte 1</a>, <a href="https://drnickel.wordpress.com/2015/03/15/long-short-atraves-de-cointegracao-parte-2/">Parte 2</a>, <a href="https://drnickel.wordpress.com/2015/04/03/long-short-atraves-de-cointegracao-parte-3/">Parte 3</a> e <a href="https://drnickel.wordpress.com/2016/11/05/long-short-atraves-de-cointegracao-parte-4/">Parte 4</a></li>
+<li><a href="https://www.quantstart.com/">QuantStart</a> - Cointegrated Time Series Analysis for Mean Reversion Trading with R - <a href="https://www.quantstart.com/articles/Cointegrated-Time-Series-Analysis-for-Mean-Reversion-Trading-with-R" class="uri">https://www.quantstart.com/articles/Cointegrated-Time-Series-Analysis-for-Mean-Reversion-Trading-with-R</a></li>
+</ol>
+</div>
+
+              
+            </div>
+          </div>
+          <div id="post-footer" class="post-footer main-content-wrap">
+            
+              
+                
+                
+                  <div class="post-footer-tags">
+                    <span class="text-color-light text-small">TAGGED IN</span><br>
+                    
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/evalutation/">evalutation</a>
+
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/long-short/">long short</a>
+
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/model/">model</a>
+
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/pair-trading/">pair trading</a>
+
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/rstats/">rstats</a>
+
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/stock-market/">stock market</a>
+
+  <a class="tag tag--primary tag--small" href="https://yetanotheriteration.netlify.com/tags/pt-br/">pt-BR</a>
+
+                  </div>
+                
+              
+            
+            
+  <div class="post-actions-wrap">
+      <nav>
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://yetanotheriteration.netlify.com/2018/10/forecasting-fantasy-games-using-monte-carlo-simulations/" data-tooltip="Forecasting Fantasy Games Using Monte Carlo Simulations">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://yetanotheriteration.netlify.com/2018/07/forecasting-my-weight-using-facebook-s-prophet/" data-tooltip="Using Facebook&#39;s Prophet to forecast my weight loss">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share">
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=/2018/08/operando-long-short-usando-cointegracao-em-r/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=/2018/08/operando-long-short-usando-cointegracao-em-r/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=/2018/08/operando-long-short-usando-cointegracao-em-r/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+
+            
+              
+                <div id="disqus_thread"><iframe id="dsq-app5508" name="dsq-app5508" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="./Operações Long-Short Cointegração R_files/saved_resource.html" style="width: 1px !important; min-width: 100% !important; border: none !important; overflow: hidden !important; height: 307px !important;" horizontalscrolling="no" verticalscrolling="no"></iframe></div>
+              
+            
+          </div>
+        </article>
+        <footer id="footer" class="main-content-wrap">
+  <span class="copyrights">
+    © 2019 Giuliano Sposito. All Rights Reserved
+  </span>
+</footer>
+
+      </div>
+      <div id="bottom-bar" class="post-bottom-bar" data-behavior="5" style="display: block;">
+        
+  <div class="post-actions-wrap">
+      <nav>
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://yetanotheriteration.netlify.com/2018/10/forecasting-fantasy-games-using-monte-carlo-simulations/" data-tooltip="Forecasting Fantasy Games Using Monte Carlo Simulations">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://yetanotheriteration.netlify.com/2018/07/forecasting-my-weight-using-facebook-s-prophet/" data-tooltip="Using Facebook&#39;s Prophet to forecast my weight loss">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share">
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=/2018/08/operando-long-short-usando-cointegracao-em-r/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=/2018/08/operando-long-short-usando-cointegracao-em-r/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=/2018/08/operando-long-short-usando-cointegracao-em-r/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+
+      </div>
+      <div id="share-options-bar" class="share-options-bar" data-behavior="5">
+  <i id="btn-close-shareoptions" class="fa fa-close"></i>
+  <ul class="share-options">
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=%2F2018%2F08%2Foperando-long-short-usando-cointegracao-em-r%2F">
+          <i class="fa fa-facebook-official"></i><span>Share on Facebook</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=%2F2018%2F08%2Foperando-long-short-usando-cointegracao-em-r%2F">
+          <i class="fa fa-twitter"></i><span>Share on Twitter</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=%2F2018%2F08%2Foperando-long-short-usando-cointegracao-em-r%2F">
+          <i class="fa fa-google-plus"></i><span>Share on Google+</span>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+<div id="share-options-mask" class="share-options-mask"></div>
+    </div>
+    
+    <div id="about">
+  <div id="about-card">
+    <div id="about-btn-close">
+      <i class="fa fa-remove"></i>
+    </div>
+    
+      <img id="about-card-picture" src="./Operações Long-Short Cointegração R_files/2adfb1930aa9591ea756b0d94ca3603b(1).jpeg" alt="Author&#39;s picture">
+    
+    <h4 id="about-card-name">Giuliano Sposito</h4>
+    
+      <div id="about-card-bio">Computer Engineer<br>Masters in Tech Innovation Mgt<br>Specialized in Data Science</div>
+    
+    
+      <div id="about-card-job">
+        <i class="fa fa-briefcase"></i>
+        <br>
+        Senior Manager<br><a href="http://www.ciandt.com/">CI&amp;T</a>
+      </div>
+    
+    
+      <div id="about-card-location">
+        <i class="fa fa-map-marker"></i>
+        <br>
+        Brazil
+      </div>
+    
+  </div>
+</div>
+
+    <div id="algolia-search-modal" class="modal-container">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="close-button"><i class="fa fa-close"></i></span>
+      <a href="https://algolia.com/" target="_blank" rel="noopener" class="searchby-algolia text-color-light link-unstyled">
+        <span class="searchby-algolia-text text-color-light text-small">by</span>
+        <img class="searchby-algolia-logo" src="./Operações Long-Short Cointegração R_files/algolia-light.svg">
+      </a>
+      <i class="search-icon fa fa-search"></i>
+      <form id="algolia-search-form">
+        <input type="text" id="algolia-search-input" name="search" class="form-control input--large search-input" placeholder="Search">
+      </form>
+    </div>
+    <div class="modal-body">
+      <div class="no-result text-color-light text-center">no post found</div>
+      <div class="results">
+        
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2019/04/agile-trends-ready-ready-po-team-heijunka/">
+                <h3 class="media-heading">Agile Trends: Ready-Ready, PO Team &amp; Heijunka</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">Durante a transformação ágil da CI&amp;T, aprendemos como a existência de um Product Owner completo, capaz de desempenhar tudo que o papel exige, é crítica não só para a qualidade do produto como também para a performance do próprio time de desenvolvimento. Hoje, frequentemente, encontramos os mesmos problemas decorrentes da atuação incompleta do PO em clientes que estão começando a sua jornada ágil. Neste post compartilho a minha apresentação realizada no Agile Trends 2019 que fala a respeito da importancia deste papel na agilidade e como resolver alguns gaps de atuação.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2019/03/comparing-fitbit-and-polar-h7-heart-rate-data/">
+                <h3 class="media-heading">Comparing Fitbit and Polar H7 heart rate data</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Mar 3, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">How good is the Fitbit measures comparing to Polar H7? The wearable Fitbit bracelet measures the heart rate based on the expansion and contraction of the capillaries in the skin throught measurement of the reflection and absorption of LED lights, different from the method used heart rate monitor Polar H7, which captures the electrical signals from the heart beat. In this post, we’ll access a WebAPI using OAuth2.0 to get Fitbit data and compare it with those obtained by a Polar H7, imported from a GPX file during the same training session.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2019/02/design-for-people-learning-summary/">
+                <h3 class="media-heading">The learning process in organizational change</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Much of the my work about lean/digital consulting and change management is to make people learning. Learning new concepts, new values, new ways of doing a job or an activity, learning to managing and lead using new tools and methods, and also involves unlearning concepts and points of view built over time, to make room for the new knowledge. So, learning is a key aspect, and also a barrier, for the people involved in the change or transformation processes. In this post, I’ll explore and summarize the key concepts in the great <a href="https://twitter.com/usablelearning">Julie Dirksen’s</a> <a href="https://www.amazon.com/gp/product/B018OJP5QW/ref=dbs_a_def_rwt_hsch_vapi_taft_p1_i0">“Design for How People Learning”</a> book. I frequently review these points when preparing a change roadmap for a team, department or company, the success of a change is direct linked with how people will effectively learn and be capable to use new knowledge in their daily work.</p>
+
+<p></p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2019/01/tensorflow-and-keras-with-r/">
+                <h3 class="media-heading">Tensorflow and Keras with R</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">I’ll start series of posts about Keras, a high-level neural networks API developed with a focus on enabling fast experimentation, running on top of TensorFlow, but using its R interface. To start, we’ll review our LeNet implemantation with MXNET for MNIST problem, a traditional “Hello World” in the Neural Network world.
+
+About Keras in R
+Keras is an API for building neural networks written in Python capable of running on top of Tensorflow, CNTK, or Theano.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2019/01/slicing-and-dicing-agile-user-stories/">
+                <h3 class="media-heading">Workshop Agile User Stories Slicing</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>A chave para a implantação de uma cultura de entrega ágil e passo importantíssimo para viabilizar DevOps, a quebra adequada de histórias de usuário é também um dos maiores desafios para as equipes que são novas na abordagem ágil. Frequentemente a mudança do que chamamos de “divisão horizontal” para “fatia vertical” exige uma mudança de racional de desenvolvimento que as equipes muitas vezes não estão acostumadas. “Bem, nosso sistema é muito complexo”, ou “precisamos construir recursos realmente grandes ou nossos usuários não conseguirão usar” são desculpas comuns nesta situação.</p>
+
+<p></p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2018/10/forecasting-fantasy-games-using-monte-carlo-simulations/">
+                <h3 class="media-heading">Forecasting Fantasy Games Using Monte Carlo Simulations</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Oct 10, 2018
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">The football season is back, and with it the Fantasy Game! In this post, we will simulate the results and the scoring of my Fantasy League games. To do that, we’ll project the scoring of teams using Monte Carlo simulation with data scraped from sites that predicts players’ performances. We will combine the various possible scores of a team’s players to estimate the team’s score distribution, and then compare with the opposing team, and finally compute each team’s chances of winning and losing.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2018/08/operando-long-short-usando-cointegracao-em-r/">
+                <h3 class="media-heading">Operações Long-Short através de Cointegração usando R</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Aug 8, 2018
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">Operações Long-Short por Cointegração é uma estratégia de investimento em ativos que consiste em encontrar pares de ações (índices ou commodities) que mantém um padrão de comportamento estável e previsível (equilíbrio estacionário) com variações de curto prazo que permita ser explorado em operações de Long (compra) e Short (venda) do par. Este R-Notebook refaz o passo-a-passo nas análises estatísticas necessárias para detectar e operação essa estratégia de mercado.
+
+Introdução
+A ideia tradicional de uma reversão de “Pair Trading” é encontrar dois ativos distintos, compartilhando fatores subjacentes que afetam seus movimentos, por exemplo, McDonald’s e Burger King.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2018/07/forecasting-my-weight-using-facebook-s-prophet/">
+                <h3 class="media-heading">Using Facebook's Prophet to forecast my weight loss</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jul 7, 2018
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">In this post, we’ll try to forecast my weight using Forecast and Facebook’s Prophet packages. We’ll see what is the performance from Facebook’s method in a simple case of forecast.
+
+Recently, in the beginning of march, I went to a Nutritionist who recommended me to start a regime to lost some weight. As a good practice in these situations, short feedback cycles are essential to (re)build good habits, so I start to weigh myself almost daily, and record the values in a spreadsheet to follow my progress.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2018/02/data-science-das-cervejas-2-2/">
+                <h3 class="media-heading">Data Science das Cervejas (2/2)</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2018
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">Esta é a segunda parte do post sobre text mining usando como base, a avaliações de cervejas extraído de um blog na web. Neste post analisaremos as semelhanças entre os diversos tipos através de suas características de sabor, cor e malte. Quais tipos de cervejas são semelhantes entre si e como tipos semelhantes ainda se diferem. Esse tipo de análise é um aspecto importante no campo de Data Science, pois permite construir um processo de “sugestões” para consumo, tomando como base o gosto atual dos usuários.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://yetanotheriteration.netlify.com/2018/02/data-science-das-cervejas-1-2/">
+                <h3 class="media-heading">Data Science das Cervejas (1/2)</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2018
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">Neste post vamos extrair, via data scraping, textos e dados de um blog de avaliações de cerveja para encontrar os termos que melhor caracterizam e descrevem os diversos tipos de cerveja através das descrições dos sabores, cores e maltes das mesmas.
+
+Base de dados com avaliação das cervejas
+O uso de avaliações de cerveja para análise de texto é bem comum1, e uma ótima maneira de exercitar técnicas de análise de texto (NLP) para evidenciar diferenças e semelhança entre elementos via descrição textual, e fica ainda mais interessante se você é também um apreciador de cervejas!</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <p class="results-count text-medium" data-message-zero="no post found" data-message-one="1 post found" data-message-other="{n} posts found">
+         20 posts found
+      </p>
+    </div>
+  </div>
+</div>
+    
+  
+    
+    <div id="cover" style="background-image:url(&#39;/images/new_cover_emboss.jpg&#39;);"></div>
+  
+
+
+    
+<script src="./Operações Long-Short Cointegração R_files/jquery.min.js.download" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+  <script src="./Operações Long-Short Cointegração R_files/highlight.min.js.download" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+
+<script src="./Operações Long-Short Cointegração R_files/jquery.fancybox.min.js.download" integrity="sha256-GEAnjcTqVP+vBp3SSc8bEDQqvWAZMiHyUSIorrWwH50=" crossorigin="anonymous"></script>
+
+
+<script src="./Operações Long-Short Cointegração R_files/script-qi9wbxp2ya2j6p7wx1i6tgavftewndznf4v0hy2gvivk1rxgc3lm7njqb6bz.min.js.download"></script>
+
+
+
+<script>
+$(document).ready(function() {
+  hljs.configure({ classPrefix: '', useBR: false });
+  $('pre.code-highlight > code, pre > code').each(function(i, block) {
+    if (!$(this).hasClass('codeblock')) {
+      $(this).addClass('codeblock');
+    }
+    hljs.highlightBlock(block);
+  });
+});
+</script>
+
+
+  
+    
+      <script>
+        var disqus_config = function () {
+          this.page.url = '\/2018\/08\/operando-long-short-usando-cointegracao-em-r\/';
+          
+            this.page.identifier = '\/2018\/08\/operando-long-short-usando-cointegracao-em-r\/'
+          
+        };
+        (function() {
+          
+          
+          if (window.location.hostname == "localhost") {
+            return;
+          }
+          var d = document, s = d.createElement('script');
+          var disqus_shortname = 'yet-another-iteration';
+          s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      </script>
+    
+  
+
+
+
+    
+    <script src="./Operações Long-Short Cointegração R_files/math-code.js.download"></script>
+    <script async="" src="./Operações Long-Short Cointegração R_files/MathJax.js.download"></script>
+  
+
+
+<div style="background-color: rgb(255, 143, 0); display: none; color: white; text-align: center; position: fixed; top: 0px; left: 0px; width: 100%; height: auto; min-width: 100%; min-height: auto; max-width: 100%; font: 12px &quot;Helvetica Neue&quot;, Helvetica, Arial, Geneva, sans-serif; cursor: pointer; padding: 5px;"><span style="color: white; font: 12px &quot;Helvetica Neue&quot;, Helvetica, Arial, Geneva, sans-serif;">You have turned off the paragraph player. You can turn it on again from the options page.</span><img src="chrome-extension://gfjopfpjmkcfgjpogepmdjmcnihfpokn/img/icons/icon-close_16.png" style="width: 20px; height: auto; min-width: 20px; min-height: auto; max-width: 20px; float: right; margin-right: 10px;"></div><iframe style="display: none;" src="./Operações Long-Short Cointegração R_files/saved_resource(1).html"></iframe><iframe id="dsq-app5511" name="dsq-app5511" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="./Operações Long-Short Cointegração R_files/saved_resource(2).html" style="width: 1px !important; min-width: 100% !important; border: none !important; overflow: hidden !important; height: 100% !important; position: fixed !important; top: 0px !important; right: 0px !important; left: auto !important; bottom: auto !important; z-index: 2147483647 !important; display: none !important;"></iframe></body><span class="gr__tooltip"><span class="gr__tooltip-content"></span><i class="gr__tooltip-logo"></i><span class="gr__triangle"></span></span></html>
