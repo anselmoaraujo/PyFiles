@@ -1,2 +1,7 @@
 poetry.lock
 .csv/
+
+# .gitignore
+.env
+__pycache__/
+*.pyc
